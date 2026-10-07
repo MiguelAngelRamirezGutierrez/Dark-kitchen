@@ -134,11 +134,13 @@ class QuickFoodErpTest extends TestCase
         $precioEsperado = $producto->precio;
         $totalEsperado = $precioEsperado * $cantidadPedida;
 
+        $uniqueAddress = 'Calle 100 # 20-30 Casa 5, Barrio Central - ' . uniqid();
+
         $response = $this->post(route('pedidos.store'), [
             'cliente_id' => $cliente->id,
             'metodo_pago_id' => $metodoPago->id,
             'domiciliario_id' => $domiciliario->id,
-            'direccion_entrega' => 'Calle 100 # 20-30 Casa 5, Barrio Central',
+            'direccion_entrega' => $uniqueAddress,
             'observaciones' => 'Test automatizado de pedido',
             'items' => [
                 [
@@ -151,7 +153,7 @@ class QuickFoodErpTest extends TestCase
         $response->assertRedirect();
 
         // Verificar que el pedido existe con estado inicial 'Recibido'
-        $pedidoCreado = Pedido::where('direccion_entrega', 'Calle 100 # 20-30 Casa 5, Barrio Central')->first();
+        $pedidoCreado = Pedido::where('direccion_entrega', $uniqueAddress)->first();
         $this->assertNotNull($pedidoCreado);
         $this->assertEquals('Recibido', $pedidoCreado->estado);
         $this->assertEquals((float)$totalEsperado, (float)$pedidoCreado->total);
