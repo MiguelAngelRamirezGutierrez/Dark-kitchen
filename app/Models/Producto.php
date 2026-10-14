@@ -21,6 +21,9 @@ class Producto extends Model
         'precio',
         'stock',
         'estado',
+        'name',
+        'price',
+        'active',
     ];
 
     protected function casts(): array
@@ -30,6 +33,36 @@ class Producto extends Model
             'stock' => 'integer',
             'estado' => 'boolean',
         ];
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['nombre'] ?? $this->attributes['name'] ?? null;
+    }
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['nombre'] = $value;
+    }
+
+    public function getPriceAttribute()
+    {
+        return $this->attributes['precio'] ?? $this->attributes['price'] ?? 0;
+    }
+
+    public function setPriceAttribute($value)
+    {
+        $this->attributes['precio'] = $value;
+    }
+
+    public function getActiveAttribute()
+    {
+        return (bool) ($this->attributes['estado'] ?? $this->attributes['active'] ?? true);
+    }
+
+    public function setActiveAttribute($value)
+    {
+        $this->attributes['estado'] = (bool) $value;
     }
 
     /**
@@ -46,6 +79,14 @@ class Producto extends Model
     public function pedidoDetalles(): HasMany
     {
         return $this->hasMany(PedidoDetalle::class, 'producto_id');
+    }
+
+    /**
+     * Relación: Un producto tiene muchos detalles de ventas (Clase 9).
+     */
+    public function saleDetails(): HasMany
+    {
+        return $this->hasMany(SaleDetail::class, 'product_id');
     }
 
     /**
