@@ -263,11 +263,82 @@ Para verificar que el sistema cumple con todos los requisitos funcionales:
 ```
 **Resultado:** `7 passed (30 assertions)` ✅
 
-Suite completa:
+---
+
+## 10. CLASE 9: INTEGRACIÓN DE MÓDULOS, TRANSACCIONES Y DASHBOARD CON KPIs
+
+### 10.1. Arquitectura de Transacciones y Reglas de Negocio
+El sistema implementa el servicio `App\Services\SaleService` que integra la lógica comercial del ERP mediante transacciones de base de datos atómicas (`DB::transaction`) y control de concurrencia (`lockForUpdate`):
+* **Cálculo de Impuestos:** Cálculo automático de Subtotal, liquidación de IVA colombiano al 19% (`round(subtotal * 0.19, 2)`) y Total a Pagar.
+* **Validación de Disponibilidad:** Bloqueo de fila para evitar condiciones de carrera (dos vendedores vendiendo la última unidad simultáneamente). Se valida que el producto esté activo y que `stock >= quantity`.
+* **Descuento Atómico de Stock:** Si todos los ítems son válidos, se genera la factura secuencial (`FV-00001`, `FV-00002`...), se crean los registros en `sale_details` y se descuenta el inventario de los productos con `$product->decrement('stock', $quantity)`.
+* **Rollback Automático:** Si un solo producto no cuenta con stock o está inactivo, toda la operación se revierte y no se crean facturas huérfanas.
+* **Regla Inversa de Anulación:** Al anular una factura (`SaleController@destroy`), se devuelve el stock a los productos con `$detail->product->increment('stock', $detail->quantity)`, se cambia su estado a `anulada` y se envía a la papelera (Soft Delete).
+* **Integridad Referencial de Clientes:** No es posible eliminar un cliente si tiene ventas asociadas (`$client->sales()->exists()`).
+
+---
+
+### 10.2. Tablas y Modelos Relacionales (Clase 9)
+
+```
+clients (1) ───< sales (N) ───< sale_details (N) >─── (N:1) productos
+users   (1) ───< sales (N)
+```
+
+1. **`clients`**:
+   - `id`, `document_type` (`CC`, `NIT`, `CE`, `PP`), `document_number` (UNIQUE), `name`, `email`, `phone`, `address`, `active` (boolean), `timestamps`, `softDeletes`.
+2. **`sales`**:
+   - `id`, `invoice_number` (UNIQUE), `client_id` (FK `clients`), `user_id` (FK `users`), `sale_date` (date), `subtotal`, `tax` (19%), `total`, `status` (`pendiente`, `pagada`, `anulada`), `notes`, `timestamps`, `softDeletes`.
+3. **`sale_details`**:
+   - `id`, `sale_id` (FK `sales`), `product_id` (FK `productos`), `quantity`, `unit_price`, `subtotal`, `timestamps`.
+
+---
+
+### 10.3. Interfaz de Usuario y Formulario Reactivo
+* **Ventas (`sales.create`):** Formulario dinámico con JavaScript que permite agregar y remover productos en tiempo real, validando stock disponible y calculando instantáneamente el Subtotal, IVA 19% y Total. En caso de error de validación del servidor, el formulario reconstruye las filas con los valores previos (`old('items')`).
+* **Factura Imprimible (`sales.show`):** Comprobante estructurado con desglose de ítems, datos del cliente, vendedor, IVA y totalización, con soporte para impresión física (`window.print()`).
+* **Clientes (`clients.index`, `clients.create`, `clients.edit`):** Módulo completo con Soft Deletes, restauración y conteo de ventas asociadas.
+
+---
+
+### 10.4. Dashboard con Indicadores Clave (KPIs) y Top 5
+El Dashboard (`DashboardController`) calcula métricas protegidas por roles y permisos:
+* **KPI 1: Productos Activos:** Conteo de platos y productos disponibles en catálogo.
+* **KPI 2: Stock Crítico (≤ 5):** Alerta de productos próximos a agotarse.
+* **KPI 3: Valor del Inventario:** Sumatoria en tiempo real de `precio * stock`.
+* **KPI 4: Clientes Activos:** Directorio comercial disponible para facturación.
+* **KPI 5: Ventas del Mes:** Total de facturas pagadas y monto acumulado del mes en curso.
+* **Top 5 Productos más Vendidos:** Tabla con los 5 productos con mayor rotación y volumen de ventas en el mes actual, agrupados mediante `SaleDetail` y `SUM(quantity)`.
+
+---
+
+### 10.5. Comandos para Obtener las Evidencias de la Clase 9
+
+| Entregable Solicitado | Ruta o Comando para Obtener la Evidencia |
+| :--- | :--- |
+| **1. Módulo de Clientes (Index)** | Ingresar a `http://localhost:8090/clients`. |
+| **2. Formulario de Nueva Venta** | Ingresar a `http://localhost:8090/sales/create` y agregar 2 productos con cantidades para ver el cálculo de IVA (19%) y Total en tiempo real. |
+| **3. Venta y Detalle en MySQL** | `docker exec dark-kitchen-main-mysql-1 mysql -u sail -ppassword laravel -e "SELECT id, invoice_number, subtotal, tax, total, status FROM sales; SELECT * FROM sale_details;"` |
+| **4. Descuento de Stock en MySQL** | `docker exec dark-kitchen-main-mysql-1 mysql -u sail -ppassword laravel -e "SELECT id, nombre, stock FROM productos LIMIT 5;"` |
+| **5. Error por Stock Insuficiente** | Intentar crear una venta con una cantidad superior al stock disponible (el sistema muestra error y no crea la venta). |
+| **6. Dashboard con KPIs y Top 5** | Ingresar a `http://localhost:8090/dashboard` como Administrador (`admin@test.com` / `password`). |
+| **7. Anulación y Devolución de Stock** | En `http://localhost:8090/sales`, hacer clic en **"Anular"**; el stock se reincorpora al producto y el estado cambia a `anulada`. |
+| **8. Control de Acceso por Roles** | Iniciar sesión como `vendedor@test.com` (puede crear ventas pero no ver categorías) o como `almacenista@test.com` (recibe 403 al entrar a `/sales/create`). |
+
+---
+
+### 10.6. Certificación Completa con Pruebas Automatizadas (22 Tests)
+Para ejecutar la suite de pruebas de la Clase 9:
+```bash
+./vendor/bin/sail artisan test --filter=Clase9IntegracionModulosTest
+```
+**Resultado:** `8 passed (38 assertions)` ✅
+
+Suite completa del proyecto (Clase 7 + Clase 9 + ERP Core):
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `14 passed (288 assertions)` ✅
+**Resultado:** `22 passed (4026 assertions)` ✅
 
 ---
 *Desarrollado con dedicación y rigurosidad técnica para el Seminario RAD &bull; Cotecnova 2026.*
