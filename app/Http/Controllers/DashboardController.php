@@ -3,24 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Models\Category;
+use App\Models\Client;
 use App\Models\Cliente;
 use App\Models\Domiciliario;
 use App\Models\Pedido;
+use App\Models\Product;
 use App\Models\Producto;
+use App\Models\Sale;
+use App\Models\SaleDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     /**
-     * Muestra el panel principal del ERP con métricas operativas y módulos según roles y permisos.
+     * Muestra el panel principal del ERP con indicadores clave (KPIs) y módulos según roles y permisos.
      */
     public function index(Request $request)
     {
         $user = $request->user();
         $roles = $user ? $user->getRoleNames() : collect();
 
-        // Módulos dinámicos según permisos del usuario (Paso 10 de la Guía)
+        // 1. Módulos dinámicos según permisos del usuario (Clase 7 & Clase 9)
         $modules = collect([
             [
                 'title' => 'Productos',
@@ -41,22 +46,31 @@ class DashboardController extends Controller
                 'icon' => 'fa-tags',
             ],
             [
-                'title' => 'Pedidos',
+                'title' => 'Clientes',
+                'description' => ($user && $user->can('crear-clientes'))
+                    ? 'Administra el directorio de clientes y facturación.'
+                    : 'Consulta el directorio de clientes.',
+                'route' => 'clients.index',
+                'permission' => 'ver-clientes',
+                'icon' => 'fa-users',
+            ],
+            [
+                'title' => 'Ventas & Facturación',
+                'description' => ($user && $user->can('crear-ventas'))
+                    ? 'Registra ventas con descuento automático de stock e IVA.'
+                    : 'Consulta el histórico de facturas y ventas.',
+                'route' => 'sales.index',
+                'permission' => 'ver-ventas',
+                'icon' => 'fa-cash-register',
+            ],
+            [
+                'title' => 'Pedidos Cocina',
                 'description' => ($user && $user->can('crear-pedidos'))
                     ? 'Gestiona órdenes de cocina, comandas y despachos.'
-                    : 'Consulta los pedidos en cocina.',
+                    : 'Consulta los pedidos en preparación.',
                 'route' => 'pedidos.index',
                 'permission' => 'ver-pedidos',
                 'icon' => 'fa-clipboard-list',
-            ],
-            [
-                'title' => 'Clientes',
-                'description' => ($user && $user->can('crear-clientes'))
-                    ? 'Administra el directorio de clientes y direcciones.'
-                    : 'Directorio de clientes para entrega.',
-                'route' => 'clientes.index',
-                'permission' => 'ver-clientes',
-                'icon' => 'fa-users',
             ],
             [
                 'title' => 'Domiciliarios',
@@ -69,33 +83,81 @@ class DashboardController extends Controller
             return !$user || $user->hasRole('admin') || $user->can($module['permission']);
         })->values();
 
-        // Estadísticas según permisos
+        // 2. Indicadores Clave de Desempeño (KPIs - Paso 12 Guía Clase 9)
         $stats = collect();
+
         if (!$user || $user->can('ver-productos') || $user->hasRole('admin')) {
-            $stats->push(['label' => 'Productos activos', 'value' => Producto::where('estado', true)->count()]);
-            $stats->push(['label' => 'Stock bajo (≤ 5)', 'value' => Producto::where('estado', true)->where('stock', '<=', 5)->count()]);
-            $stats->push(['label' => 'Valor del inventario', 'value' => '$ ' . number_format((float) Producto::where('estado', true)->sum(DB::raw('precio * stock')), 0, ',', '.')]);
-        }
-        if (!$user || $user->can('ver-categorias') || $user->hasRole('admin')) {
-            $stats->push(['label' => 'Categorías activas', 'value' => Categoria::where('estado', true)->count()]);
+            $stats->push([
+                'label' => 'Productos activos',
+                'value' => Product::where('active', true)->count(),
+                'icon' => 'fa-box',
+                'color' => 'blue',
+            ]);
+            $stats->push([
+                'label' => 'Stock bajo (≤ 5)',
+                'value' => Product::where('active', true)->where('stock', '<=', 5)->count(),
+                'icon' => 'fa-triangle-exclamation',
+                'color' => 'amber',
+            ]);
+            $stats->push([
+                'label' => 'Valor del inventario',
+                'value' => '$ ' . number_format((float) Product::where('active', true)->sum(DB::raw('price * stock')), 0, ',', '.'),
+                'icon' => 'fa-vault',
+                'color' => 'emerald',
+            ]);
         }
 
-        // Métricas operativas del ERP
+        if (!$user || $user->can('ver-clientes') || $user->hasRole('admin')) {
+            $stats->push([
+                'label' => 'Clientes activos',
+                'value' => Client::where('active', true)->count(),
+                'icon' => 'fa-users',
+                'color' => 'indigo',
+            ]);
+        }
+
+        if (!$user || $user->can('ver-ventas') || $user->hasRole('admin')) {
+            $salesThisMonth = Sale::whereMonth('sale_date', now()->month)
+                ->whereYear('sale_date', now()->year)
+                ->where('status', '!=', 'anulada');
+
+            $countSales = $salesThisMonth->count();
+            $sumSales = (float) $salesThisMonth->sum('total');
+
+            $stats->push([
+                'label' => 'Ventas del mes',
+                'value' => $countSales . ' ($ ' . number_format($sumSales, 0, ',', '.') . ')',
+                'icon' => 'fa-chart-line',
+                'color' => 'purple',
+            ]);
+        }
+
+        // 3. Top 5 productos más vendidos del mes actual (Paso 12 Guía Clase 9)
+        $topProducts = collect();
+        if (!$user || $user->can('ver-reportes') || $user->can('ver-ventas') || $user->hasRole('admin')) {
+            $topProducts = SaleDetail::query()
+                ->select('product_id', DB::raw('SUM(quantity) as total_sold'))
+                ->whereHas('sale', function ($q) {
+                    $q->whereMonth('sale_date', now()->month)
+                      ->whereYear('sale_date', now()->year)
+                      ->where('status', '!=', 'anulada');
+                })
+                ->with('product:id,nombre,name,precio,price')
+                ->groupBy('product_id')
+                ->orderByDesc('total_sold')
+                ->limit(5)
+                ->get();
+        }
+
+        // 4. Métricas operativas complementarias del ERP Dark Kitchen
         $pedidosHoy = Pedido::hoy()->count();
         $pedidosPendientes = Pedido::pendientes()->count();
         $pedidosEntregados = Pedido::entregados()->count();
-        $productosActivos = Producto::activos()->count();
         $ventasHoy = Pedido::hoy()->where('estado', '!=', 'Cancelado')->sum('total');
 
         $pedidosRecientes = Pedido::with(['cliente', 'domiciliario', 'metodoPago'])
             ->latest()
-            ->take(8)
-            ->get();
-
-        $productosBajoStock = Producto::with('categoria')
-            ->where('stock', '<=', 25)
-            ->orderBy('stock', 'asc')
-            ->take(5)
+            ->take(6)
             ->get();
 
         $estadosConteo = [
@@ -112,13 +174,12 @@ class DashboardController extends Controller
             'roles',
             'modules',
             'stats',
+            'topProducts',
             'pedidosHoy',
             'pedidosPendientes',
             'pedidosEntregados',
-            'productosActivos',
             'ventasHoy',
             'pedidosRecientes',
-            'productosBajoStock',
             'estadosConteo'
         ));
     }
