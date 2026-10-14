@@ -103,9 +103,16 @@
                 @endcan
 
                 @can('ver-clientes')
-                    <a href="{{ route('clientes.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('clientes.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <a href="{{ route('clients.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('clients.*') || request()->routeIs('clientes.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                         <i class="fa-solid fa-users w-5 text-center"></i>
                         <span>Clientes</span>
+                    </a>
+                @endcan
+
+                @can('ver-ventas')
+                    <a href="{{ route('sales.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('sales.*') || request()->routeIs('ventas.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <i class="fa-solid fa-cash-register w-5 text-center"></i>
+                        <span>Ventas & Facturas</span>
                     </a>
                 @endcan
 
