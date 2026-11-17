@@ -11,12 +11,13 @@ use App\Http\Controllers\MetodoPagoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - QuickFood ERP (Clase 7 & Clase 9: Integración de Módulos y KPIs)
+| Web Routes - QuickFood ERP (Clase 7, 9 & 10)
 |--------------------------------------------------------------------------
 */
 
@@ -31,7 +32,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-// Panel de control / Dashboard con KPIs (Paso 12 de la Guía)
+// Panel de control / Dashboard con KPIs
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // --- MÓDULO PRODUCTOS (Con Soft Deletes y Permisos) ---
@@ -63,6 +64,12 @@ Route::patch('clients/{client}/restore', [ClientController::class, 'restore'])
     ->withTrashed()
     ->name('clients.restore');
 Route::resource('clients', ClientController::class)->except('show');
+
+// --- MÓDULO PROVEEDORES (Clase 10: Soft Deletes y Permisos) ---
+Route::patch('providers/{provider}/restore', [ProviderController::class, 'restore'])
+    ->withTrashed()
+    ->name('providers.restore');
+Route::resource('providers', ProviderController::class)->except('show');
 
 // --- MÓDULO VENTAS (Clase 9: Transacciones, Descuento de Stock y Facturas) ---
 Route::resource('sales', SaleController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
