@@ -48,8 +48,24 @@ class AccessControlService
             }
 
             $user->save();
+
+            $before = [
+                'roles' => $user->getRoleNames()->sort()->values()->all(),
+                'permisos_directos' => $user->getDirectPermissions()->pluck('name')->sort()->values()->all(),
+            ];
+
             $user->syncRoles($roles);
             $user->syncPermissions($data['permissions'] ?? []); // permisos DIRECTOS
+
+            // Clase 12: los cambios de seguridad quedan en la bitácora
+            $after = [
+                'roles' => collect($roles)->sort()->values()->all(),
+                'permisos_directos' => collect($data['permissions'] ?? [])->sort()->values()->all(),
+            ];
+
+            if ($before !== $after) {
+                $this->logSecurity($user, 'roles y permisos del usuario modificados', $before, $after);
+            }
 
             return $user;
         });
@@ -100,13 +116,33 @@ class AccessControlService
      */
     public function syncRolePermissions(Role $role, array $permissions): void
     {
+        $before = $role->permissions()->pluck('name')->sort()->values()->all();
+
         if ($role->name === PermissionCatalog::superRole()) {
             $role->syncPermissions(Permission::all());
-
-            return;
+        } else {
+            $role->syncPermissions($permissions);
         }
 
-        $role->syncPermissions($permissions);
+        $after = $role->permissions()->pluck('name')->sort()->values()->all();
+
+        if ($before !== $after) {
+            $this->logSecurity($role, "permisos del rol «{$role->name}» modificados", ['permisos' => $before], ['permisos' => $after]);
+        }
+    }
+
+    /**
+     * Clase 12: Spatie no audita roles ni permisos por sí solo; se registra manualmente
+     * con el mismo formato (old / attributes) que usan los modelos auditados.
+     */
+    private function logSecurity($subject, string $description, array $old, array $new): void
+    {
+        activity('seguridad')
+            ->performedOn($subject)
+            ->causedBy(auth()->user())
+            ->event('updated')
+            ->withChanges(['old' => $old, 'attributes' => $new])
+            ->log($description);
     }
 
     /**

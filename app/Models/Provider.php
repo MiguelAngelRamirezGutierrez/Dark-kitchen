@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
 {
-    use SoftDeletes;
+    use Auditable, SoftDeletes;
+
+    // Auditoría (Clase 12)
+    protected string $auditLog = 'proveedores';
 
     protected $fillable = [
         'document_type',

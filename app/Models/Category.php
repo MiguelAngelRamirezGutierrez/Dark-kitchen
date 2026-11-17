@@ -2,8 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
+
 class Category extends Categoria
 {
+    use Auditable;
+
+    // Auditoría (Clase 12)
+    protected string $auditLog = 'categorias';
+
     protected $table = 'categorias';
 
     protected $fillable = [
