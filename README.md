@@ -467,4 +467,106 @@ Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + ERP Core):
 **Resultado:** `33 passed (8025 assertions)` ✅
 
 ---
+
+## 12. Gestión de Roles, Permisos por Usuario y Rol Activo (Guía Adicional Clase 10)
+
+En esta fase se construye dentro del ERP un módulo de **Configuración de Seguridad Integral** que permite a los administradores gestionar usuarios, roles y permisos en caliente sin tocar código. Se implementa el principio de **Segregación de Funciones (Separation of Duties - SoD)** mediante el concepto de **Rol Activo**, resolviendo el problema de la unión ciega de permisos de Spatie.
+
+### 12.1. Arquitectura de Seguridad y Rol Activo
+
+```
+                  ┌──────────────────────────────────────────────┐
+                  │              PERMISOS EFECTIVOS              │
+                  │   = Rol Activo + Permisos Directos Usuario   │
+                  └──────────────────────────────────────────────┘
+                                         │
+                 ┌───────────────────────┴───────────────────────┐
+                 ▼                                               ▼
+     ┌───────────────────────┐                       ┌───────────────────────┐
+     │   ROL ACTIVO ELEGIDO  │                       │   PERMISOS DIRECTOS   │
+     │  (vendedor / almac.)  │                       │   (excepciones indiv) │
+     └───────────┬───────────┘                       └───────────┬───────────┘
+                 │                                               │
+                 └───────────────────────┬───────────────────────┘
+                                         ▼
+                            ┌─────────────────────────┐
+                            │   Gate::before Laravel  │
+                            │  (AppServiceProvider)   │
+                            └─────────────────────────┘
+```
+
+* **Segregación de Funciones:** Si un usuario tiene múltiples roles (ej.: `supervisor@test.com` es Vendedor y Almacenista), al iniciar sesión el sistema le exige seleccionar con cuál trabajar. No puede actuar con ambos a la vez, garantizando que quien emite una compra no se facture a sí mismo como vendedor en la misma sesión.
+* **Cambio Dinámico:** Desde el menú de usuario puede alternar su rol de trabajo en cualquier momento (`/rol-activo`).
+* **Verificador Central de Spatie Desactivado:** Se configuró `'register_permission_check_method' => false` en `config/permission.php` y se registró un `Gate::before` en `AppServiceProvider` que consulta `$user->hasPermissionInActiveRole($ability)`.
+* **Middleware `EnsureActiveRole`:** Obliga a los usuarios con múltiples roles a seleccionar rol de trabajo y expulsa inmediatamente a cualquier usuario cuya cuenta haya sido desactivada.
+
+### 12.2. Usuarios Activos e Inactivos (Trazabilidad)
+
+* **Migración:** Campo `active` (boolean, default true) en tabla `users`.
+* **Regla de Negocio:** En lugar de eliminar usuarios (lo que rompería la integridad histórica y referencial de compras y ventas), se desactivan.
+* **Control de Acceso:** Un usuario inactivo no puede iniciar sesión. Si es desactivado con sesión abierta, es deslogueado y redirigido al login en su siguiente interacción.
+
+### 12.3. Módulo de Configuración Integral (`/configuracion`)
+
+* **1. Tablero General (`/configuracion`):** Indicadores de usuarios totales, inactivos, con múltiples roles, roles y permisos registrados.
+* **2. Administración de Usuarios (`/configuracion/usuarios`):**
+  * Alta y edición de credenciales y datos personales.
+  * Asignación múltiple de roles.
+  * Asignación de permisos directos para excepciones puntuales con indicador visual `por rol: ...` de permisos ya heredados.
+  * Botón directo de activación y desactivación (toggle).
+* **3. Catálogo y CRUD de Roles (`/configuracion/roles`):**
+  * Creación y edición de roles mediante una matriz Módulo $\times$ Acción.
+  * Normalización automática a slug (`Jefe de Bodega` $\rightarrow$ `jefe-de-bodega`).
+  * Protección: El rol `admin` no se renombra ni se elimina y conserva siempre todos los permisos.
+* **4. Matriz Interactiva de Permisos (`/configuracion/permisos`):**
+  * Filas: Permisos agrupados por módulo funcional.
+  * Columnas: Roles configurados en el ERP.
+  * Filtro por módulo específico conservando intactos los permisos de los módulos no visibles gracias al parámetro `visible[]`.
+  * Filtro de auditoría **"Ver como usuario"**: Permite inspeccionar qué permisos efectivos tiene un usuario y su procedencia exacta (`rol: vendedor`, `rol: almacenista` o `directo`).
+  * Creación dinámica de permisos bajo convención `accion-modulo`.
+
+### 12.4. Reglas de Protección y Seguridad Crítica
+
+1. **Permanencia del Administrador:** Siempre debe existir al menos un usuario activo con el rol `admin`. No se permite desactivar ni quitar el rol al último administrador.
+2. **Nadie se auto-desactiva:** Un usuario con rol admin no puede desactivar su propia cuenta.
+3. **Inmutabilidad del Super Rol:** El rol `admin` no puede ser eliminado ni renombrado.
+4. **Protección de Roles en Uso:** No se puede eliminar un rol que tenga usuarios asignados.
+5. **Protección de Permisos en Uso:** No se puede eliminar un permiso que esté asignado a algún rol o como permiso directo a un usuario.
+
+### 12.5. Usuarios y Credenciales de Demostración
+
+| Usuario | Correo | Contraseña | Roles Asignados | Permisos Directos | Particularidad |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Administrador** | `admin@test.com` | `password` | `admin` | Todos | Acceso total al ERP y a `/configuracion`. |
+| **Supervisor** | `supervisor@test.com` | `password` | `vendedor`, `almacenista` | `ver-reportes` | **Dos roles:** exige elegir rol al iniciar sesión. |
+| **Vendedor** | `vendedor@test.com` | `password` | `vendedor` | Ninguno | Acceso comercial. Compras le da 403. |
+| **Almacenista** | `almacenista@test.com` | `password` | `almacenista` | Ninguno | Acceso a bodega y compras. Ventas le da 403. |
+
+### 12.6. Guía de Verificación y Evidencias de la Guía Adicional
+
+| Entregable Solicitado | Ruta o Acción para Demostrar en Vivo |
+| :--- | :--- |
+| **1. Selección de Rol Activo** | Iniciar sesión como `supervisor@test.com` (`password`); redirige automáticamente a `/rol-activo`. |
+| **2. Segregación de Funciones** | Supervisor en modo vendedor: entra a `/sales` pero recibe 403 en `/purchases`. Cambia a almacenista: entra a `/purchases` pero recibe 403 en `/sales`. |
+| **3. Permiso Directo** | Supervisor en cualquiera de sus dos roles puede ver reportes gracias a su permiso directo personal `ver-reportes`. |
+| **4. Panel de Configuración** | Ingresar como `admin@test.com` a `http://localhost:8090/configuracion`. |
+| **5. CRUD de Usuarios y Roles** | Crear y editar usuarios y roles con asignación interactiva Módulo $\times$ Acción. |
+| **6. Matriz de Permisos y Auditoría** | Filtrar por módulo en `/configuracion/permisos` o auditar "Ver como usuario" para ver la procedencia de cada permiso. |
+| **7. Protección de Inactivación** | Desactivar a un usuario en `/configuracion/usuarios`: se bloquea su login y si tenía sesión abierta es expulsado inmediatamente. |
+
+### 12.7. Certificación con Suite de Pruebas Automatizadas (47 Tests)
+
+Suite específica de Roles, Permisos y Rol Activo:
+```bash
+./vendor/bin/sail artisan test --filter=Clase10RolesPermisosAdicionalTest
+```
+**Resultado:** `14 passed (49 assertions)` ✅
+
+Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + Guía Adicional SoD + ERP Core):
+```bash
+./vendor/bin/sail artisan test
+```
+**Resultado:** `47 passed (13342 assertions)` ✅
+
+---
 *Desarrollado con dedicación y rigurosidad técnica para el Seminario RAD &bull; Cotecnova 2026.*
