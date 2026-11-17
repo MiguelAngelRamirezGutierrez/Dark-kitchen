@@ -14,11 +14,14 @@
                     Bienvenido, {{ $user?->name ?? 'Usuario del Sistema' }}
                 </h2>
                 <p class="text-sm text-slate-500 mt-0.5">
-                    Rol asignado: 
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $roles->contains('admin') ? 'bg-orange-100 text-orange-800' : ($roles->contains('almacenista') ? 'bg-purple-100 text-purple-800' : ($roles->contains('vendedor') ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700')) }}">
-                        <i class="fa-solid fa-id-badge mr-1"></i>
-                        {{ $roles->isNotEmpty() ? $roles->join(', ') : 'Sin rol asignado' }}
-                    </span>
+                    <strong>Roles asignados:</strong> {{ $roles->isEmpty() ? 'Sin rol asignado' : $roles->join(', ') }}
+                    @if ($roles->count() > 1)
+                        · <strong>Rol activo:</strong>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 capitalize">
+                            {{ $activeRole }}
+                        </span>
+                        (<a href="{{ route('active-role.edit') }}" class="text-xs text-orange-600 hover:text-orange-800 underline font-semibold">cambiar</a>)
+                    @endif
                 </p>
             </div>
             <div class="flex items-center gap-2">
@@ -27,6 +30,30 @@
                     <span>Cambiar Rol / Probar Usuario</span>
                 </a>
             </div>
+        </div>
+
+        {{-- Accesos rápidos (cada botón aparece solo si el usuario tiene el permiso) --}}
+        <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-100">
+            @can('crear-productos')
+                <a href="{{ route('productos.create') }}" class="rounded-xl bg-orange-600 hover:bg-orange-700 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition">
+                    <i class="fa-solid fa-plus mr-1"></i> Nuevo producto
+                </a>
+            @endcan
+            @can('crear-categorias')
+                <a href="{{ route('categorias.create') }}" class="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition">
+                    <i class="fa-solid fa-plus mr-1"></i> Nueva categoría
+                </a>
+            @endcan
+            @can('crear-ventas')
+                <a href="{{ route('sales.create') }}" class="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition">
+                    <i class="fa-solid fa-plus mr-1"></i> Nueva venta
+                </a>
+            @endcan
+            @can('crear-compras')
+                <a href="{{ route('purchases.create') }}" class="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition">
+                    <i class="fa-solid fa-plus mr-1"></i> Nueva orden de compra
+                </a>
+            @endcan
         </div>
 
         <!-- Indicadores Clave de Desempeño (KPIs - Paso 12 Guía Clase 9) -->

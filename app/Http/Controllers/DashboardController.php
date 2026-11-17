@@ -99,6 +99,13 @@ class DashboardController extends Controller
                 'permission' => 'ver-domiciliarios',
                 'icon' => 'fa-motorcycle',
             ],
+            [
+                'title' => 'Configuración',
+                'description' => 'Usuarios, roles y permisos de acceso al ERP.',
+                'route' => 'settings.index',
+                'permission' => 'ver-usuarios',
+                'icon' => 'fa-gear',
+            ],
         ])->filter(function (array $module) use ($user) {
             return !$user || $user->hasRole('admin') || $user->can($module['permission']);
         })->values();
@@ -247,13 +254,18 @@ class DashboardController extends Controller
             'Cancelado' => Pedido::where('estado', 'Cancelado')->count(),
         ];
 
+        $activeRole = $user?->activeRole()?->name;
+        $lowStock = $reorderProducts;
+
         return view('dashboard', compact(
             'user',
             'roles',
+            'activeRole',
             'modules',
             'stats',
             'topProducts',
             'reorderProducts',
+            'lowStock',
             'pedidosHoy',
             'pedidosPendientes',
             'pedidosEntregados',

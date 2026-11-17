@@ -130,6 +130,13 @@
                     </a>
                 @endcan
 
+                @canany(['ver-usuarios', 'ver-roles', 'ver-permisos'])
+                    <a href="{{ route('settings.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('settings.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <i class="fa-solid fa-gear w-5 text-center"></i>
+                        <span>Configuración</span>
+                    </a>
+                @endcanany
+
                 <div class="pt-3 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Logística & Finanzas</div>
 
                 @can('ver-domiciliarios')
@@ -152,10 +159,21 @@
                 <div class="bg-slate-800/80 rounded-lg p-2.5 border border-slate-700/60 mb-2">
                     <div class="flex items-center justify-between">
                         <span class="text-white font-bold truncate max-w-[140px]">{{ auth()->user()->name }}</span>
-                        <span class="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold uppercase">
-                            {{ auth()->user()->roles->first()?->name ?? 'Sin rol' }}
-                        </span>
+                        @if ($activeRole = auth()->user()->activeRole())
+                            <span class="text-[10px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-bold uppercase">
+                                {{ $activeRole->name }}
+                            </span>
+                        @else
+                            <span class="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded font-bold uppercase">
+                                Sin rol
+                            </span>
+                        @endif
                     </div>
+                    @if (auth()->user()->hasMultipleRoles())
+                        <a href="{{ route('active-role.edit') }}" class="text-[11px] text-orange-400 hover:text-orange-300 underline block mt-1">
+                            <i class="fa-solid fa-repeat mr-1"></i> Cambiar rol
+                        </a>
+                    @endif
                     <form action="{{ route('logout') }}" method="POST" class="mt-2">
                         @csrf
                         <button type="submit" class="w-full text-center text-xs bg-slate-700 hover:bg-rose-600 text-slate-200 hover:text-white py-1 rounded transition flex items-center justify-center space-x-1">
