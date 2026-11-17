@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiveRoleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CategoryController;
@@ -35,6 +36,12 @@ Route::get('/', function () {
 
 // Panel de control / Dashboard con KPIs
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Rol activo (usuarios con varios roles)
+Route::middleware('auth')->group(function () {
+    Route::get('rol-activo', [ActiveRoleController::class, 'edit'])->name('active-role.edit');
+    Route::put('rol-activo', [ActiveRoleController::class, 'update'])->name('active-role.update');
+});
 
 // --- MÓDULO PRODUCTOS (Con Soft Deletes y Permisos) ---
 Route::patch('productos/{producto}/restore', [ProductoController::class, 'restore'])

@@ -33,7 +33,20 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            // Regla: un usuario desactivado no puede entrar aunque la contraseña sea correcta
+            if (! Auth::user()->active) {
+                Auth::guard('web')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Su usuario está inactivo. Contacte al administrador.',
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
+            // Cada inicio de sesión vuelve a preguntar el rol (si el usuario tiene varios)
+            $request->session()->forget('active_role');
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Sesión iniciada correctamente como ' . Auth::user()->name);
@@ -63,8 +76,15 @@ class AuthController extends Controller
      */
     public function quickLogin(User $user, Request $request)
     {
+        if (! $user->active) {
+            return back()->withErrors([
+                'email' => 'Su usuario está inactivo. Contacte al administrador.',
+            ]);
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->forget('active_role');
 
         return redirect()->route('dashboard')
             ->with('success', "Has iniciado sesión rápidamente como {$user->name} (" . ($user->roles->first()?->name ?? 'sin rol') . ")");
