@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -12,6 +11,9 @@ class RolePermissionSeeder extends Seeder
 {
     /**
      * Crea (o actualiza) permisos y roles. Se puede ejecutar varias veces sin duplicar registros.
+     *
+     * IMPORTANTE: define el estado INICIAL de los roles. Si después se cambian permisos desde
+     * Configuración → Roles, volver a ejecutar este seeder los devuelve a lo que dice aquí.
      */
     public function run(): void
     {
@@ -42,6 +44,10 @@ class RolePermissionSeeder extends Seeder
             'ver-usuarios', 'crear-usuarios', 'editar-usuarios',
             'ver-roles', 'crear-roles', 'editar-roles', 'eliminar-roles',
             'ver-permisos', 'crear-permisos', 'eliminar-permisos',
+
+            // Inventario (kardex) y auditoría (Clase 12)
+            'ver-inventario', 'ajustar-inventario',
+            'ver-auditoria',
         ];
 
         // findOrCreate: si el permiso ya existe no lo duplica
@@ -67,6 +73,7 @@ class RolePermissionSeeder extends Seeder
             'ver-proveedores', 'crear-proveedores', 'editar-proveedores',
             'ver-compras', 'crear-compras', 'recibir-compras',
             'ver-papelera',
+            'ver-inventario', 'ajustar-inventario',
         ]);
     }
 }
