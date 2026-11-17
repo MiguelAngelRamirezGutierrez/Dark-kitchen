@@ -6,16 +6,23 @@
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">
 
-    <!-- Acciones Superiores (Volver / Imprimir) -->
+    <!-- Acciones Superiores (Volver / Descargar PDF / Imprimir) -->
     <div class="flex items-center justify-between no-print">
         <a href="{{ route('sales.index') }}" class="inline-flex items-center space-x-1.5 text-sm font-semibold text-slate-600 hover:text-slate-800 transition">
             <i class="fa-solid fa-arrow-left"></i>
             <span>Volver al Listado de Ventas</span>
         </a>
-        <button onclick="window.print()" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition">
-            <i class="fa-solid fa-print"></i>
-            <span>Imprimir Factura</span>
-        </button>
+        <div class="flex items-center space-x-2">
+            <a href="{{ route('sales.pdf', $sale) }}" target="_blank"
+               class="inline-flex items-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>Descargar PDF</span>
+            </a>
+            <button onclick="window.print()" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition">
+                <i class="fa-solid fa-print"></i>
+                <span>Imprimir Factura</span>
+            </button>
+        </div>
     </div>
 
     <!-- Factura Principal -->

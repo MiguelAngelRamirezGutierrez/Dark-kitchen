@@ -123,6 +123,9 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                                <a href="{{ route('sales.pdf', $sale) }}" target="_blank" title="Descargar PDF" class="inline-flex items-center text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 p-1.5 rounded-lg transition">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
                                 <a href="{{ route('sales.show', $sale) }}" class="inline-flex items-center space-x-1 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
                                     <i class="fa-solid fa-eye"></i>
                                     <span>Ver Factura</span>
