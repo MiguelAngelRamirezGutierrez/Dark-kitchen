@@ -183,7 +183,13 @@
         <!-- Topbar -->
         <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between no-print shadow-sm">
             <div class="flex items-center space-x-3">
-                <h1 class="text-xl font-bold text-slate-800">@yield('page_title', 'Dashboard')</h1>
+                <h1 class="text-xl font-bold text-slate-800">
+                    @isset($header)
+                        {{ $header }}
+                    @else
+                        @yield('page_title', 'Dashboard')
+                    @endisset
+                </h1>
                 <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
                     <i class="fa-regular fa-clock mr-1 text-slate-400"></i> {{ now()->isoFormat('D [de] MMMM, YYYY') }}
                 </span>
@@ -238,7 +244,11 @@
 
         <!-- Contenedor del Cuerpo de la Vista -->
         <main class="flex-1 p-6">
-            @yield('content')
+            @isset($slot)
+                {{ $slot }}
+            @else
+                @yield('content')
+            @endisset
         </main>
     </div>
 
