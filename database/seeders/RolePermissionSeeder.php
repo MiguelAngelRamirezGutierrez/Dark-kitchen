@@ -10,6 +10,9 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
+    /**
+     * Crea (o actualiza) permisos y roles. Se puede ejecutar varias veces sin duplicar registros.
+     */
     public function run(): void
     {
         // Limpiar la caché de permisos de Spatie
@@ -20,12 +23,14 @@ class RolePermissionSeeder extends Seeder
             'ver-productos', 'crear-productos', 'editar-productos', 'eliminar-productos',
             // Categorías
             'ver-categorias', 'crear-categorias', 'editar-categorias', 'eliminar-categorias',
-            // Clientes (Paso 1 Guía Clase 9)
+            // Clientes (Clase 9)
             'ver-clientes', 'crear-clientes', 'editar-clientes', 'eliminar-clientes',
-            // Ventas (Paso 1 Guía Clase 9)
+            // Ventas (Clase 9)
             'ver-ventas', 'crear-ventas', 'editar-ventas', 'eliminar-ventas',
-            // Compras
-            'ver-compras', 'crear-compras',
+            // Proveedores (Clase 10)
+            'ver-proveedores', 'crear-proveedores', 'editar-proveedores', 'eliminar-proveedores',
+            // Compras (Clase 10: se agrega recibir-compras)
+            'ver-compras', 'crear-compras', 'editar-compras', 'eliminar-compras', 'recibir-compras',
             // Pedidos (ERP QuickFood / Dark Kitchen)
             'ver-pedidos', 'crear-pedidos', 'editar-pedidos', 'eliminar-pedidos', 'cambiar-estado-pedidos',
             // Domiciliarios
@@ -42,7 +47,7 @@ class RolePermissionSeeder extends Seeder
         // Rol Administrador: acceso total
         Role::findOrCreate('admin')->syncPermissions(Permission::all());
 
-        // Rol Vendedor (según Paso 1 de la Guía Clase 9)
+        // Rol Vendedor (según Paso 1 de la Guía Clase 9 & 10)
         Role::findOrCreate('vendedor')->syncPermissions([
             'ver-productos',
             'ver-clientes', 'crear-clientes', 'editar-clientes',
@@ -50,11 +55,12 @@ class RolePermissionSeeder extends Seeder
             'ver-pedidos', 'crear-pedidos', 'cambiar-estado-pedidos',
         ]);
 
-        // Rol Almacenista (según Paso 1 de la Guía Clase 9)
+        // Rol Almacenista (según Paso 2 de la Guía Clase 10)
         Role::findOrCreate('almacenista')->syncPermissions([
             'ver-productos', 'crear-productos', 'editar-productos',
             'ver-categorias',
-            'ver-compras', 'crear-compras',
+            'ver-proveedores', 'crear-proveedores', 'editar-proveedores',
+            'ver-compras', 'crear-compras', 'recibir-compras',
             'ver-papelera',
         ]);
 
