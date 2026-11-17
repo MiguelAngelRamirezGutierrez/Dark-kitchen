@@ -12,6 +12,7 @@ use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
 
@@ -71,7 +72,15 @@ Route::patch('providers/{provider}/restore', [ProviderController::class, 'restor
     ->name('providers.restore');
 Route::resource('providers', ProviderController::class)->except('show');
 
-// --- MÓDULO VENTAS (Clase 9: Transacciones, Descuento de Stock y Facturas) ---
+// --- MÓDULO COMPRAS (Clase 10: Recepción, PDF y Reglas de Negocio) ---
+Route::patch('purchases/{purchase}/receive', [PurchaseController::class, 'receive'])
+    ->name('purchases.receive');
+Route::get('purchases/{purchase}/pdf', [PurchaseController::class, 'pdf'])
+    ->name('purchases.pdf');
+Route::resource('purchases', PurchaseController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+
+// --- MÓDULO VENTAS (Clase 9 & 10: Transacciones, Descuento de Stock y PDF) ---
+Route::get('sales/{sale}/pdf', [SaleController::class, 'pdf'])->name('sales.pdf');
 Route::resource('sales', SaleController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 Route::resource('ventas', SaleController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
 
