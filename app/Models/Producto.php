@@ -90,6 +90,14 @@ class Producto extends Model
     }
 
     /**
+     * Relación: Un producto tiene muchos detalles de compra (Clase 10).
+     */
+    public function purchaseDetails(): HasMany
+    {
+        return $this->hasMany(PurchaseDetail::class, 'product_id');
+    }
+
+    /**
      * Scope para productos activos.
      */
     public function scopeActivos($query)

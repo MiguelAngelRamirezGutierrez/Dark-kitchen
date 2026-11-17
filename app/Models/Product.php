@@ -25,4 +25,15 @@ class Product extends Producto
     {
         return $this->belongsTo(Category::class, 'categoria_id')->withTrashed();
     }
+
+    public function saleDetails(): HasMany
+    {
+        return $this->hasMany(SaleDetail::class, 'product_id');
+    }
+
+    // Relación: un producto aparece en muchos detalles de compra (Clase 10)
+    public function purchaseDetails(): HasMany
+    {
+        return $this->hasMany(PurchaseDetail::class, 'product_id');
+    }
 }
