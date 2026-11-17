@@ -10,6 +10,8 @@ use App\Models\Domiciliario;
 use App\Models\Pedido;
 use App\Models\Product;
 use App\Models\Producto;
+use App\Models\Provider;
+use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleDetail;
 use Illuminate\Http\Request;
@@ -64,6 +66,24 @@ class DashboardController extends Controller
                 'icon' => 'fa-cash-register',
             ],
             [
+                'title' => 'Proveedores',
+                'description' => ($user && $user->can('crear-proveedores'))
+                    ? 'Administra el catálogo de proveedores e insumos.'
+                    : 'Consulta el directorio de proveedores.',
+                'route' => 'providers.index',
+                'permission' => 'ver-proveedores',
+                'icon' => 'fa-truck-field',
+            ],
+            [
+                'title' => 'Órdenes de Compra',
+                'description' => ($user && $user->can('crear-compras'))
+                    ? 'Genera órdenes y gestiona recepciones físicas en bodega.'
+                    : 'Consulta órdenes de compra y recepciones.',
+                'route' => 'purchases.index',
+                'permission' => 'ver-compras',
+                'icon' => 'fa-truck-ramp-box',
+            ],
+            [
                 'title' => 'Pedidos Cocina',
                 'description' => ($user && $user->can('crear-pedidos'))
                     ? 'Gestiona órdenes de cocina, comandas y despachos.'
@@ -116,6 +136,7 @@ class DashboardController extends Controller
             ]);
         }
 
+        $sumSales = 0.0;
         if (!$user || $user->can('ver-ventas') || $user->hasRole('admin')) {
             $salesThisMonth = Sale::whereMonth('sale_date', now()->month)
                 ->whereYear('sale_date', now()->year)
@@ -129,6 +150,53 @@ class DashboardController extends Controller
                 'value' => $countSales . ' ($ ' . number_format($sumSales, 0, ',', '.') . ')',
                 'icon' => 'fa-chart-line',
                 'color' => 'purple',
+            ]);
+        }
+
+        // Proveedores activos (Clase 10)
+        if (!$user || $user->can('ver-proveedores') || $user->hasRole('admin')) {
+            $stats->push([
+                'label' => 'Proveedores activos',
+                'value' => Provider::where('active', true)->count(),
+                'icon' => 'fa-truck-field',
+                'color' => 'teal',
+            ]);
+        }
+
+        // Compras y Órdenes por recibir (Clase 10)
+        $sumPurchases = 0.0;
+        if (!$user || $user->can('ver-compras') || $user->hasRole('admin')) {
+            $purchasesThisMonth = Purchase::whereMonth('purchase_date', now()->month)
+                ->whereYear('purchase_date', now()->year)
+                ->where('status', '!=', 'anulada');
+
+            $countPurchases = $purchasesThisMonth->count();
+            $sumPurchases = (float) $purchasesThisMonth->sum('total');
+
+            $stats->push([
+                'label' => 'Compras del mes',
+                'value' => $countPurchases . ' ($ ' . number_format($sumPurchases, 0, ',', '.') . ')',
+                'icon' => 'fa-truck-ramp-box',
+                'color' => 'orange',
+            ]);
+
+            $pendingPurchases = Purchase::whereIn('status', ['pendiente', 'parcial'])->count();
+            $stats->push([
+                'label' => 'Órdenes por recibir',
+                'value' => $pendingPurchases,
+                'icon' => 'fa-clock-rotate-left',
+                'color' => 'amber',
+            ]);
+        }
+
+        // Margen Bruto Mes (Ventas - Compras)
+        if (!$user || $user->hasRole('admin') || ($user->can('ver-ventas') && $user->can('ver-compras'))) {
+            $margin = $sumSales - $sumPurchases;
+            $stats->push([
+                'label' => 'Margen mensual (Vtas - Cps)',
+                'value' => '$ ' . number_format($margin, 0, ',', '.'),
+                'icon' => 'fa-scale-balanced',
+                'color' => $margin >= 0 ? 'emerald' : 'rose',
             ]);
         }
 
@@ -149,7 +217,17 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // 4. Métricas operativas complementarias del ERP Dark Kitchen
+        // 4. Insumos y Productos con Stock Bajo para Reabastecimiento (Clase 10)
+        $reorderProducts = collect();
+        if (!$user || $user->can('ver-productos') || $user->can('ver-compras') || $user->hasRole('admin')) {
+            $reorderProducts = Product::where('active', true)
+                ->where('stock', '<=', 5)
+                ->orderBy('stock')
+                ->limit(6)
+                ->get();
+        }
+
+        // 5. Métricas operativas complementarias del ERP Dark Kitchen
         $pedidosHoy = Pedido::hoy()->count();
         $pedidosPendientes = Pedido::pendientes()->count();
         $pedidosEntregados = Pedido::entregados()->count();
@@ -175,6 +253,7 @@ class DashboardController extends Controller
             'modules',
             'stats',
             'topProducts',
+            'reorderProducts',
             'pedidosHoy',
             'pedidosPendientes',
             'pedidosEntregados',

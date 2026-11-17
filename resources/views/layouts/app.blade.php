@@ -116,6 +116,20 @@
                     </a>
                 @endcan
 
+                @can('ver-proveedores')
+                    <a href="{{ route('providers.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('providers.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <i class="fa-solid fa-truck-field w-5 text-center"></i>
+                        <span>Proveedores</span>
+                    </a>
+                @endcan
+
+                @can('ver-compras')
+                    <a href="{{ route('purchases.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('purchases.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <i class="fa-solid fa-truck-ramp-box w-5 text-center"></i>
+                        <span>Órdenes de Compra</span>
+                    </a>
+                @endcan
+
                 <div class="pt-3 pb-1 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Logística & Finanzas</div>
 
                 @can('ver-domiciliarios')

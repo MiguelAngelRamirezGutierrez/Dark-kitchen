@@ -128,6 +128,43 @@
         </div>
     @endif
 
+    <!-- Reabastecimiento Crítico de Insumos (Clase 10: Stock ≤ 5) -->
+    @if ($reorderProducts->isNotEmpty())
+        <div class="bg-gradient-to-br from-amber-50/70 to-orange-50/40 rounded-2xl border border-amber-200/90 shadow-sm p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/60 pb-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-sm">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">Reabastecimiento Crítico de Insumos & Platos</h3>
+                        <p class="text-xs text-slate-600">Productos con inventario crítico (≤ 5 unidades). Requieren emisión de orden de compra.</p>
+                    </div>
+                </div>
+                @can('crear-compras')
+                    <a href="{{ route('purchases.create') }}" class="inline-flex items-center space-x-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm transition whitespace-nowrap">
+                        <i class="fa-solid fa-cart-flatbed"></i>
+                        <span>Generar Orden de Compra</span>
+                    </a>
+                @endcan
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                @foreach ($reorderProducts as $product)
+                    <div class="bg-white rounded-xl border border-amber-200 p-3.5 flex items-center justify-between shadow-xs">
+                        <div class="truncate pr-2">
+                            <span class="text-xs font-bold text-slate-800 block truncate">{{ $product->name }}</span>
+                            <span class="text-[11px] text-slate-400 font-mono">${{ number_format((float) $product->price, 0, ',', '.') }}</span>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold font-mono {{ $product->stock == 0 ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-amber-100 text-amber-800 border border-amber-200' }}">
+                            {{ $product->stock }} en stock
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <!-- Tarjetas de Métricas Principales de Pedidos -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Pedidos Hoy -->
