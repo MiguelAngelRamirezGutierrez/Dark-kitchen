@@ -168,7 +168,7 @@
                     </div>
                     <p class="text-xs text-slate-500">
                         Se crea con la convención <code class="bg-slate-100 px-1 py-0.5 rounded text-orange-600 font-mono">accion-modulo</code> y se asigna automáticamente al rol <strong>{{ $superRole }}</strong>.
-                        Recuerde que un permiso nuevo solo tiene efecto cuando el código lo verifica (middleware <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">permission:</code> o <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">@can</code>).
+                        Recuerde que un permiso nuevo solo tiene efecto cuando el código lo verifica (middleware <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">permission:</code> o <code class="bg-slate-100 px-1 py-0.5 rounded font-mono">@@can</code>).
                     </p>
 
                     <form method="POST" action="{{ route('settings.permissions.store') }}" class="flex flex-wrap items-end gap-3 pt-2">
