@@ -346,4 +346,125 @@ Suite completa del proyecto (Clase 7 + Clase 9 + ERP Core):
 **Resultado:** `22 passed (4026 assertions)` ✅
 
 ---
+
+## 11. Módulo de Compras, Proveedores y Reportes PDF (Clase 10)
+
+En esta fase se consolida el ciclo cerrado de inventario para **QuickFood ERP**, conectando el abastecimiento de materia prima (entradas por órdenes de compra y recepción física) con la comercialización gastronómica (salidas por facturación y ventas). Además, se incorpora la generación de reportes y documentos oficiales en formato PDF con la identidad corporativa de la Dark Kitchen.
+
+### 11.1. Arquitectura del Ciclo Completo de Inventario
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   CICLO DE INVENTARIO CERRADO                          │
+└────────────────────────────────────────────────────────────────────────┘
+
+  [ Proveedor ]
+       │
+       ▼ (1) Emisión OC
+  ┌──────────────┐     (2) Recepción Física Bodega
+  │  purchases   │ ───────────────────────────────────► ┌─────────────┐
+  │ (pendiente)  │      (incrementa stock de forma atómica) │  productos  │
+  └──────────────┘                                      │ (Inventario)│
+                                                        └─────────────┘
+                                                               ▲
+                                                               │ (3) Facturación Venta
+                                                               │ (decrementa stock)
+                                                        ┌─────────────┐
+                                                        │    sales    │ ◄─── [ Cliente ]
+                                                        │ (completada)│
+                                                        └─────────────┘
+```
+
+### 11.2. Módulo de Proveedores (`providers`)
+
+* **Migración y Estructura:** Tabla `providers` con campos: `document_type`, `document_number` (único), `name`, `contact_name`, `email`, `phone`, `address`, `active` y `SoftDeletes`.
+* **Protección de Integridad:** Un proveedor no puede ser eliminado si posee órdenes de compra registradas en el sistema.
+* **Form Requests:** `StoreProviderRequest` y `UpdateProviderRequest` con validaciones de unicidad compuesta, formatos y sanitización.
+* **Seeder Especializado (`ProviderSeeder`):** 4 proveedores reales adaptados a Dark Kitchen (Carnes Maduradas, Panadería Artesanal, Bebidas y Refrescos, Verduras & Fruver).
+
+### 11.3. Módulo de Compras (`purchases` y `purchase_details`)
+
+#### Máquina de Estados de la Orden de Compra:
+```
+           ┌──────────────────────┐
+           │      pendiente       │  (Al emitir la OC: NO incrementa stock)
+           └──────────┬───────────┘
+                      │
+         ┌────────────┴────────────┐
+         │ (Recepción parcial)     │ (Anulación sin entregas)
+         ▼                         ▼
+  ┌──────────────┐          ┌──────────────┐
+  │   parcial    │          │   anulada    │ (No movió stock)
+  └──────┬───────┘          └──────────────┘
+         │ (Recepción restante)
+         ▼
+  ┌──────────────┐
+  │   recibida   │ (Stock 100% ingresado en bodega)
+  └──────────────┘
+```
+
+#### Reglas de Negocio Implementadas en `PurchaseService`:
+1. **Registro sin Movimiento Prematuro:** La orden nace en estado `pendiente`. El inventario en bodega no cambia hasta la entrega física.
+2. **Recepción Atómica con Concurrencia Segura:** La recepción (`receive()`) utiliza `DB::transaction()` y `lockForUpdate()`. Dos almacenistas no pueden colisionar al recibir la misma orden.
+3. **Incremento de Stock Proporcional:** Solo las unidades efectivamente recibidas en cada entrega ingresan a la columna `stock` de la tabla `productos`.
+4. **Validación de Límite Máximo:** No se permite recibir una cantidad mayor a la pendiente por ítem (`pendingQuantity()`). Cualquier intento arroja `ValidationException`.
+5. **No Vacíos ni Negativos:** Las cantidades recibidas deben ser mayores a cero.
+6. **Protección de Anulación:** No se puede anular una orden que ya tenga recepciones registradas en bodega (para evitar discrepancias de inventario físico).
+7. **No Duplicados:** En el formulario de compra se valida mediante `Rule::distinct` que no se repitan filas con el mismo producto.
+
+### 11.4. Generación de Reportes PDF con DomPDF (`barryvdh/laravel-dompdf`)
+
+Se diseñaron plantillas optimizadas para DomPDF con HTML tabular y estilos CSS compatibles, utilizando la fuente `DejaVu Sans` para soportar acentos y caracteres especiales UTF-8:
+* **Orden de Compra (`OC-XXXXX.pdf`):** Accesible en `/purchases/{purchase}/pdf`. Contiene datos del proveedor, dirección de entrega en bodega, desglose de cantidades solicitadas y recibidas, costos unitarios, subtotal, IVA (19%), total y firmas de autorización.
+* **Factura Electrónica de Venta (`FV-XXXXX.pdf`):** Accesible en `/sales/{sale}/pdf`. Contiene resolución DIAN, datos del cliente, desglose de ítems vendidos, IVA discriminado, total a pagar y condiciones legales según la Ley 1231 de 2008.
+
+### 11.5. Dashboard y Alertas de Reabastecimiento
+
+* **Nuevos KPIs en Panel Principal:**
+  * **Compras del mes:** Cantidad de órdenes emitidas y valor monetario total del mes.
+  * **Órdenes por recibir:** Conteo de órdenes en estado `pendiente` o `parcial`.
+  * **Proveedores activos:** Número total de proveedores habilitados.
+  * **Margen operativo mensual:** Diferencial financiero entre Ventas del mes y Compras del mes.
+* **Tabla de Reabastecimiento Crítico:** Detección automática de insumos con stock $\le 5$ unidades, con botón de acceso directo a creación de orden de compra.
+
+### 11.6. Matriz de Roles y Permisos (Spatie RBAC)
+
+| Módulo / Acción | Permiso Spatie | Admin | Almacenista | Vendedor | Cocinero |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| Ver Proveedores | `ver-proveedores` | ✅ | ✅ | ❌ | ❌ |
+| Crear Proveedores | `crear-proveedores` | ✅ | ✅ | ❌ | ❌ |
+| Editar Proveedores | `editar-proveedores` | ✅ | ✅ | ❌ | ❌ |
+| Eliminar Proveedores | `eliminar-proveedores` | ✅ | ❌ | ❌ | ❌ |
+| Ver Órdenes de Compra | `ver-compras` | ✅ | ✅ | ❌ | ❌ |
+| Crear Orden de Compra | `crear-compras` | ✅ | ✅ | ❌ | ❌ |
+| Recibir Mercancía en Bodega | `recibir-compras` | ✅ | ✅ | ❌ | ❌ |
+| Anular Orden de Compra | `eliminar-compras` | ✅ | ❌ | ❌ | ❌ |
+
+### 11.7. Guía de Verificación y Evidencias (Clase 10)
+
+| Entregable Solicitado | Ruta / Acción para Demostrar en Vivo |
+| :--- | :--- |
+| **1. Directorio de Proveedores** | Ingresar a `http://localhost:8090/providers` (CRUD completo y filtros). |
+| **2. Nueva Orden de Compra** | Entrar a `http://localhost:8090/purchases/create` y seleccionar proveedor y productos. |
+| **3. Recepción en Bodega** | En `http://localhost:8090/purchases/{id}`, ingresar cantidad en "Llega ahora" y confirmar entrada a inventario. |
+| **4. Descarga PDF Orden de Compra** | Clic en **"Descargar PDF"** en la orden de compra o abrir `http://localhost:8090/purchases/{id}/pdf`. |
+| **5. Descarga PDF Factura de Venta** | Clic en **"Descargar PDF"** en cualquier venta o abrir `http://localhost:8090/sales/{id}/pdf`. |
+| **6. Dashboard con KPIs y Reorden** | Ingresar a `http://localhost:8090/dashboard` como Administrador o Almacenista. |
+| **7. Suite de Pruebas Clase 10** | Ejecutar `./vendor/bin/sail artisan test --filter=Clase10ComprasPdfTest`. |
+
+### 11.8. Certificación con Suite de Pruebas Automatizadas (33 Tests)
+
+Suite específica de Clase 10:
+```bash
+./vendor/bin/sail artisan test --filter=Clase10ComprasPdfTest
+```
+**Resultado:** `11 passed (31 assertions)` ✅
+
+Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + ERP Core):
+```bash
+./vendor/bin/sail artisan test
+```
+**Resultado:** `33 passed (8025 assertions)` ✅
+
+---
 *Desarrollado con dedicación y rigurosidad técnica para el Seminario RAD &bull; Cotecnova 2026.*
