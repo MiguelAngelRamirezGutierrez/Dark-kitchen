@@ -40,4 +40,10 @@ class PurchaseDetail extends Model
     {
         return $this->quantity - $this->received_quantity;
     }
+
+    // Alias amigable para vistas y reportes
+    public function getQuantityReceivedAttribute(): int
+    {
+        return (int) $this->received_quantity;
+    }
 }

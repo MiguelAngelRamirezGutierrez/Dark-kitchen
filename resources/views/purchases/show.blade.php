@@ -145,8 +145,8 @@
                             <td class="py-3 text-center font-mono font-semibold text-slate-900">
                                 {{ $detail->quantity }}
                             </td>
-                            <td class="py-3 text-center font-mono font-semibold {{ $detail->quantity_received > 0 ? 'text-emerald-600' : 'text-slate-400' }}">
-                                {{ $detail->quantity_received }}
+                            <td class="py-3 text-center font-mono font-semibold {{ $detail->received_quantity > 0 ? 'text-emerald-600' : 'text-slate-400' }}">
+                                {{ $detail->received_quantity }}
                             </td>
                             <td class="py-3 text-center font-mono font-bold {{ $detail->pendingQuantity() > 0 ? 'text-amber-600' : 'text-slate-300' }}">
                                 {{ $detail->pendingQuantity() }}
@@ -249,7 +249,7 @@
                                             {{ $detail->product?->name }}
                                         </td>
                                         <td class="py-3 px-4 text-center font-mono">{{ $detail->quantity }}</td>
-                                        <td class="py-3 px-4 text-center font-mono text-emerald-600">{{ $detail->quantity_received }}</td>
+                                        <td class="py-3 px-4 text-center font-mono text-emerald-600">{{ $detail->received_quantity }}</td>
                                         <td class="py-3 px-4 text-center font-mono font-bold text-amber-700">{{ $pending }}</td>
                                         <td class="py-3 px-4 text-right">
                                             @if($pending > 0)

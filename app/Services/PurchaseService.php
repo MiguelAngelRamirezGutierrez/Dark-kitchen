@@ -142,17 +142,21 @@ class PurchaseService
      * Anula una orden de compra. Regla: solo si NO ha llegado mercancía (estado "pendiente"),
      * por lo tanto no hay stock que devolver.
      */
-    public function cancel(Purchase $purchase): void
+    public function cancel(Purchase $purchase): Purchase
     {
+        $purchase->refresh();
+
         if (! $purchase->canBeCancelled()) {
             throw ValidationException::withMessages([
                 'purchase' => "La orden {$purchase->purchase_number} ya tiene mercancía recibida y no se puede anular.",
             ]);
         }
 
-        DB::transaction(function () use ($purchase) {
+        return DB::transaction(function () use ($purchase) {
             $purchase->update(['status' => 'anulada']);
             $purchase->delete();
+
+            return $purchase;
         });
     }
 

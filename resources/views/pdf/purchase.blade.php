@@ -75,8 +75,8 @@
                         <strong>{{ $detail->product?->name ?? 'Producto #' . $detail->product_id }}</strong>
                     </td>
                     <td class="text-center font-mono font-bold">{{ $detail->quantity }}</td>
-                    <td class="text-center font-mono" style="color: {{ $detail->quantity_received > 0 ? '#166534' : '#64748b' }};">
-                        {{ $detail->quantity_received }}
+                    <td class="text-center font-mono" style="color: {{ $detail->received_quantity > 0 ? '#166534' : '#64748b' }};">
+                        {{ $detail->received_quantity }}
                     </td>
                     <td class="text-right font-mono">${{ number_format((float) $detail->unit_cost, 2, ',', '.') }}</td>
                     <td class="text-right font-mono font-bold">${{ number_format((float) $detail->subtotal, 2, ',', '.') }}</td>
