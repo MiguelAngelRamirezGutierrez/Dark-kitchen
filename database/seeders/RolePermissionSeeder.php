@@ -37,6 +37,11 @@ class RolePermissionSeeder extends Seeder
             'ver-domiciliarios', 'crear-domiciliarios', 'editar-domiciliarios', 'eliminar-domiciliarios',
             // Papelera y Reportes
             'ver-papelera', 'ver-reportes',
+
+            // Configuración de seguridad (guía adicional de la Clase 10)
+            'ver-usuarios', 'crear-usuarios', 'editar-usuarios',
+            'ver-roles', 'crear-roles', 'editar-roles', 'eliminar-roles',
+            'ver-permisos', 'crear-permisos', 'eliminar-permisos',
         ];
 
         // findOrCreate: si el permiso ya existe no lo duplica
@@ -44,10 +49,10 @@ class RolePermissionSeeder extends Seeder
             Permission::findOrCreate($permission);
         }
 
-        // Rol Administrador: acceso total
+        // El administrador siempre tiene TODOS los permisos
         Role::findOrCreate('admin')->syncPermissions(Permission::all());
 
-        // Rol Vendedor (según Paso 1 de la Guía Clase 9 & 10)
+        // Rol Vendedor
         Role::findOrCreate('vendedor')->syncPermissions([
             'ver-productos',
             'ver-clientes', 'crear-clientes', 'editar-clientes',
@@ -55,7 +60,7 @@ class RolePermissionSeeder extends Seeder
             'ver-pedidos', 'crear-pedidos', 'cambiar-estado-pedidos',
         ]);
 
-        // Rol Almacenista (según Paso 2 de la Guía Clase 10)
+        // Rol Almacenista
         Role::findOrCreate('almacenista')->syncPermissions([
             'ver-productos', 'crear-productos', 'editar-productos',
             'ver-categorias',
@@ -63,24 +68,5 @@ class RolePermissionSeeder extends Seeder
             'ver-compras', 'crear-compras', 'recibir-compras',
             'ver-papelera',
         ]);
-
-        // Usuarios de prueba con roles asignados (contraseña: password)
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@test.com'],
-            ['name' => 'Administrador QuickFood', 'password' => 'password']
-        );
-        $admin->syncRoles(['admin']);
-
-        $vendedor = User::firstOrCreate(
-            ['email' => 'vendedor@test.com'],
-            ['name' => 'Vendedor QuickFood', 'password' => 'password']
-        );
-        $vendedor->syncRoles(['vendedor']);
-
-        $almacenista = User::firstOrCreate(
-            ['email' => 'almacenista@test.com'],
-            ['name' => 'Almacenista QuickFood', 'password' => 'password']
-        );
-        $almacenista->syncRoles(['almacenista']);
     }
 }

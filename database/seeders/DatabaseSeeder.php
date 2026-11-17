@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
         // Llamar a los seeders en orden de dependencia
         $this->call([
             RolePermissionSeeder::class,
+            TestUserSeeder::class,
             CategoriaSeeder::class,
             ProductoSeeder::class,
             ClienteSeeder::class,
