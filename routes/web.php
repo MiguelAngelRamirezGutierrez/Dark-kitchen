@@ -15,6 +15,10 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\Settings\PermissionController;
+use App\Http\Controllers\Settings\RoleController;
+use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Settings\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -97,3 +101,21 @@ Route::patch('pedidos/{pedido}/cambiar-estado', [PedidoController::class, 'cambi
 Route::resource('clientes', ClienteController::class);
 Route::resource('domiciliarios', DomiciliarioController::class);
 Route::resource('metodos-pago', MetodoPagoController::class);
+
+// --- MÓDULO CONFIGURACIÓN: Usuarios, Roles y Permisos (Guía Adicional Clase 10) ---
+Route::middleware('auth')->prefix('configuracion')->name('settings.')->group(function () {
+    Route::get('/', SettingsController::class)->name('index');
+    Route::patch('usuarios/{user}/estado', [UserController::class, 'toggle'])
+        ->name('users.toggle');
+    Route::resource('usuarios', UserController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['usuarios' => 'user'])
+        ->names('users');
+    Route::resource('roles', RoleController::class)->except('show');
+    Route::get('permisos', [PermissionController::class, 'index'])->name('permissions.index');
+    Route::put('permisos', [PermissionController::class, 'updateMatrix'])
+        ->name('permissions.matrix');
+    Route::post('permisos', [PermissionController::class, 'store'])->name('permissions.store');
+    Route::delete('permisos/{permission}', [PermissionController::class, 'destroy'])
+        ->name('permissions.destroy');
+});
