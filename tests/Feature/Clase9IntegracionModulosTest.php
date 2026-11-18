@@ -27,7 +27,7 @@ class Clase9IntegracionModulosTest extends TestCase
     {
         $admin = User::where('email', 'admin@test.com')->first();
         $client = Client::first();
-        $product = Product::where('stock', '>=', 5)->first();
+        $product = Product::where('stock', '>=', 5)->where('estado', true)->first();
 
         $initialStock = $product->stock;
         $quantity = 2;
@@ -110,10 +110,16 @@ class Clase9IntegracionModulosTest extends TestCase
     {
         $admin = User::where('email', 'admin@test.com')->first();
         $client = Client::first();
-        $product = Product::first();
-
-        // Desactivar producto
-        $product->update(['estado' => false, 'active' => false]);
+        $category = Category::first();
+        $product = Product::create([
+            'categoria_id' => $category->id,
+            'nombre' => 'Producto Inactivo Test ' . uniqid(),
+            'descripcion' => 'Prueba inactivo',
+            'precio' => 12000,
+            'stock' => 10,
+            'estado' => false,
+            'active' => false,
+        ]);
 
         $service = app(SaleService::class);
 

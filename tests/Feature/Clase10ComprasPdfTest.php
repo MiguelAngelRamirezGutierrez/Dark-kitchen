@@ -330,7 +330,7 @@ class Clase10ComprasPdfTest extends TestCase
     {
         $admin = User::where('email', 'admin@test.com')->first();
         $client = Client::first();
-        $product = Product::where('stock', '>=', 2)->first();
+        $product = Product::where('stock', '>=', 2)->where('estado', true)->first();
 
         $saleService = app(SaleService::class);
         $sale = $saleService->register([
