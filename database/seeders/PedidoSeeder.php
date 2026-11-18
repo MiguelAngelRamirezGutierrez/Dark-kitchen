@@ -18,6 +18,10 @@ class PedidoSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Pedido::exists()) {
+            return;
+        }
+
         $pedidosData = [
             // 1. Recibido - Recién entrado a cocina
             [

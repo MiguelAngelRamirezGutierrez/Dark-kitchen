@@ -26,7 +26,7 @@ class MetodoPagoSeeder extends Seeder
         ];
 
         foreach ($metodos as $metodo) {
-            MetodoPago::create($metodo);
+            MetodoPago::firstOrCreate(['nombre' => $metodo['nombre']], $metodo);
         }
     }
 }

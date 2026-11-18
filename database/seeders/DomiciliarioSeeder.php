@@ -86,7 +86,7 @@ class DomiciliarioSeeder extends Seeder
         ];
 
         foreach ($domiciliarios as $domiciliario) {
-            Domiciliario::create($domiciliario);
+            Domiciliario::firstOrCreate(['documento' => $domiciliario['documento']], $domiciliario);
         }
     }
 }
