@@ -9,6 +9,9 @@ use Illuminate\Validation\ValidationException;
 
 class SaleService
 {
+    // Clase 12: el stock lo mueve el InventoryService (kardex)
+    public function __construct(private InventoryService $inventory) {}
+
     /**
      * Registra una venta completa dentro de una transacción.
      *
@@ -79,8 +82,8 @@ class SaleService
                     'subtotal' => $item['subtotal'],
                 ]);
 
-                // Descuento de stock
-                $item['product']->decrement('stock', $item['quantity']);
+                // Descuento de stock + movimiento en el kardex (Clase 12)
+                $this->inventory->exit($item['product'], $item['quantity'], 'venta', $sale, (float) $item['unit_price']);
             }
 
             return $sale;

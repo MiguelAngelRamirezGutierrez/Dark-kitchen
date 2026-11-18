@@ -6,6 +6,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Services\InventoryService;
 use App\Services\SaleService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -31,9 +32,10 @@ class SaleController extends Controller implements HasMiddleware
             ->with(['client', 'user'])
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = '%'.$request->string('search').'%';
+                // Se agrupa el OR entre paréntesis para no anular los filtros de fecha
                 $q->where(function ($q) use ($search) {
                     $q->where('invoice_number', 'like', $search)
-                      ->orWhereHas('client', fn ($q) => $q->where('name', 'like', $search));
+                        ->orWhereHas('client', fn ($q) => $q->where('name', 'like', $search));
                 });
             })
             ->when($request->filled('from'), fn ($q) => $q->whereDate('sale_date', '>=', $request->input('from')))
@@ -78,13 +80,13 @@ class SaleController extends Controller implements HasMiddleware
         return view('sales.show', ['sale' => $sale]);
     }
 
-    public function destroy(Sale $sale)
+    public function destroy(Sale $sale, InventoryService $inventory)
     {
-        // Regla de negocio: al anular, se devuelve el stock a los productos
-        DB::transaction(function () use ($sale) {
+        // Regla de negocio: al anular, se devuelve el stock a los productos (con movimiento en el kardex)
+        DB::transaction(function () use ($sale, $inventory) {
             foreach ($sale->details as $detail) {
                 if ($detail->product) {
-                    $detail->product->increment('stock', $detail->quantity);
+                    $inventory->entry($detail->product, $detail->quantity, 'anulacion_venta', $sale, (float) $detail->unit_price);
                 }
             }
 
@@ -96,7 +98,7 @@ class SaleController extends Controller implements HasMiddleware
             ->with('success', "Venta «{$sale->invoice_number}» anulada y stock devuelto.");
     }
 
-    // Clase 10: factura de venta en PDF
+    // Clase anterior: factura de venta en PDF
     public function pdf(Sale $sale)
     {
         $sale->load(['client', 'user', 'details.product']);

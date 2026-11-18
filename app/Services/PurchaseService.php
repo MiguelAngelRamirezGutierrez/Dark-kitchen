@@ -9,6 +9,9 @@ use Illuminate\Validation\ValidationException;
 
 class PurchaseService
 {
+    // Clase 12: el stock lo mueve el InventoryService (kardex)
+    public function __construct(private InventoryService $inventory) {}
+
     /**
      * Registra una ORDEN DE COMPRA (estado "pendiente"). Todavía NO mueve el inventario:
      * el stock solo aumenta cuando la mercancía llega físicamente (método receive).
@@ -109,10 +112,13 @@ class PurchaseService
                 // Actualizar la línea y AUMENTAR el stock del producto
                 $detail->increment('received_quantity', $quantity);
 
-                Product::withTrashed()
-                    ->lockForUpdate()
-                    ->findOrFail($detail->product_id)
-                    ->increment('stock', $quantity);
+                $this->inventory->entry(
+                    Product::withTrashed()->findOrFail($detail->product_id),
+                    $quantity,
+                    'compra',
+                    $purchase,
+                    (float) $detail->unit_cost
+                );
 
                 $receivedSomething = true;
             }
@@ -142,21 +148,17 @@ class PurchaseService
      * Anula una orden de compra. Regla: solo si NO ha llegado mercancía (estado "pendiente"),
      * por lo tanto no hay stock que devolver.
      */
-    public function cancel(Purchase $purchase): Purchase
+    public function cancel(Purchase $purchase): void
     {
-        $purchase->refresh();
-
         if (! $purchase->canBeCancelled()) {
             throw ValidationException::withMessages([
                 'purchase' => "La orden {$purchase->purchase_number} ya tiene mercancía recibida y no se puede anular.",
             ]);
         }
 
-        return DB::transaction(function () use ($purchase) {
+        DB::transaction(function () use ($purchase) {
             $purchase->update(['status' => 'anulada']);
             $purchase->delete();
-
-            return $purchase;
         });
     }
 
