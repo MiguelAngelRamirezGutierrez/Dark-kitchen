@@ -171,14 +171,14 @@ Esta guía describe el guion exacto para presentar y sustentar el proyecto con �
 | :---: | :--- | :--- |
 | **0 - 1** | **1. Empresa Elegida** | Explicar que se eligió **QuickFood**, una *Dark Kitchen* ficticia de comidas rápidas artesanales enfocada en preparación bajo comanda y servicio a domicilio. |
 | **1 - 2** | **2. Problema Identificado** | Cuellos de botella por órdenes en papel, descoordinación en ruta con domiciliarios, pedidos enviados a direcciones obsoletas y falta de control de stock en horas pico. |
-| **2 - 3** | **3. Procesos Identificados** | Mostrar el flujo: Cliente ➔ Pedido (Recibido) ➔ Preparación (Cocina) ➔ Empaque (Listo) ➔ Despacho (En camino) ➔ Entrega y Cobro. Mencionando el módulo futuro de compras de insumos. |
+| **2 - 3** | **3. Procesos Identificados** | Mostrar el flujo: Cliente -> Pedido (Recibido) -> Preparación (Cocina) -> Empaque (Listo) -> Despacho (En camino) -> Entrega y Cobro. Mencionando el módulo futuro de compras de insumos. |
 | **3 - 4** | **4. Mostrar el MER** | Abrir [`docs/diagrama_mer.png`](docs/diagrama_mer.png) o [`docs/diagrama_mer.md`](docs/diagrama_mer.md). Explicar las 7 entidades de negocio, llaves primarias, foráneas y cardinalidad 1:N. |
 | **4 - 5** | **5. Mostrar Migraciones** | Abrir la carpeta `database/migrations/`. Explicar las restricciones `cascadeOnDelete()`, `nullOnDelete()`, tipos de datos `decimal(12,2)` e integridad referencial. |
 | **5 - 6** | **6. Mostrar Modelos y Relaciones** | Abrir `app/Models/Pedido.php` y `app/Models/Producto.php`. Enseñar las relaciones `belongsTo()`, `hasMany()`, y los Scopes (`scopePendientes()`, `scopeActivos()`). |
 | **6 - 7** | **7. Mostrar Datos en MySQL** | Ejecutar en terminal: `./vendor/bin/sail mysql` y correr `SELECT 'categorias', count(*) FROM categorias ...`. Demostrar que todas las tablas tienen mínimo 10 registros coherentes y reales. |
 | **7 - 8** | **8. Listado de Pedidos en el ERP** | Abrir el navegador en `http://localhost/pedidos`. Mostrar la tabla de pedidos, filtros por estado, paginación y explicar cómo el **Eager Loading** (`with(...)`) optimiza las consultas SQL. |
 | **8 - 9** | **9. Crear un Pedido** | Ir a `http://localhost/pedidos/create`. Seleccionar cliente (ver cómo se autocompleta la dirección), agregar productos con cantidades (ver cálculo en tiempo real de subtotales y total), guardar la orden y verificar que se descontó el stock. |
-| **9 - 9.5**| **10. Transición de Estados** | Abrir la comanda recién creada (`pedidos.show`). Presionar los botones de avance: `Recibido` ➔ `Preparando` ➔ `Listo` ➔ Asignar domiciliario ➔ `En camino` ➔ `Entregado`. |
+| **9 - 9.5**| **10. Transición de Estados** | Abrir la comanda recién creada (`pedidos.show`). Presionar los botones de avance: `Recibido` -> `Preparando` -> `Listo` -> Asignar domiciliario -> `En camino` -> `Entregado`. |
 | **9.5 - 10**| **11. Pruebas Automatizadas** | Correr `./vendor/bin/sail artisan test` en la terminal para demostrar que los 7 tests con 185 aserciones pasan en verde (100% aprobado). |
 
 ---
@@ -203,16 +203,16 @@ En cumplimiento de la **Guía Completa - Clase 7: Roles, Permisos y CRUD Complet
 
 Se definieron los 3 roles de negocio requeridos en la rúbrica mediante `RolePermissionSeeder`:
 
-| Permiso / Módulo | `admin` 👑 | `almacenista` 📦 | `vendedor` 🛒 | Sin Rol 👤 |
+| Permiso / Módulo | `admin` | `almacenista` | `vendedor` | Sin Rol |
 | :--- | :---: | :---: | :---: | :---: |
-| **`ver-productos`** | ✅ Sí | ✅ Sí | ✅ Sí (Solo lectura) | ❌ No |
-| **`crear-productos`** / **`editar-productos`** | ✅ Sí | ✅ Sí | ❌ No (HTTP 403) | ❌ No |
-| **`eliminar-productos`** (Papelera y Restaurar) | ✅ Sí | ❌ No (HTTP 403) | ❌ No (HTTP 403) | ❌ No |
-| **`ver-categorias`** | ✅ Sí | ✅ Sí | ❌ No (HTTP 403) | ❌ No |
-| **`crear` / `editar` / `eliminar-categorias`** | ✅ Sí | ❌ No (HTTP 403) | ❌ No (HTTP 403) | ❌ No |
-| **`ver-pedidos`** / **`crear-pedidos`** | ✅ Sí | ❌ No | ✅ Sí | ❌ No |
-| **`ver-clientes`** / **`crear-clientes`** | ✅ Sí | ❌ No | ✅ Sí | ❌ No |
-| **Dashboard** | ✅ Completo | ✅ Catálogo | ✅ Operativo | ⚠️ Sin módulos |
+| **`ver-productos`** | Sí | Sí | Sí (Solo lectura) | No |
+| **`crear-productos`** / **`editar-productos`** | Sí | Sí | No (HTTP 403) | No |
+| **`eliminar-productos`** (Papelera y Restaurar) | Sí | No (HTTP 403) | No (HTTP 403) | No |
+| **`ver-categorias`** | Sí | Sí | No (HTTP 403) | No |
+| **`crear` / `editar` / `eliminar-categorias`** | Sí | No (HTTP 403) | No (HTTP 403) | No |
+| **`ver-pedidos`** / **`crear-pedidos`** | Sí | No | Sí | No |
+| **`ver-clientes`** / **`crear-clientes`** | Sí | No | Sí | No |
+| **Dashboard** | Completo | Catálogo | Operativo | Sin módulos |
 
 #### Usuarios de Prueba para Sustentación
 El sistema incluye usuarios preconfigurados listos para probar:
@@ -220,7 +220,7 @@ El sistema incluye usuarios preconfigurados listos para probar:
 * **Almacenista:** `almacenista@test.com` (Contraseña: `password`)
 * **Vendedor:** `vendedor@test.com` (Contraseña: `password`)
 
-> 💡 **Conmutador Rápido de Roles:** Puede ingresar a `http://localhost:8090/login` donde encontrará botones de 1-clic para cambiar de rol al instante durante la exposición.
+> **Nota - Conmutador Rápido de Roles:** Puede ingresar a `http://localhost:8090/login` donde encontrará botones de 1-clic para cambiar de rol al instante durante la exposición.
 
 ---
 
@@ -266,7 +266,7 @@ Para verificar que el sistema cumple con todos los requisitos funcionales:
 ```bash
 ./vendor/bin/sail artisan test --filter=Clase7RolesPermisosTest
 ```
-**Resultado:** `7 passed (30 assertions)` ✅
+**Resultado:** `7 passed (30 assertions)`
 
 ---
 
@@ -337,13 +337,13 @@ Para ejecutar la suite de pruebas de la Clase 9:
 ```bash
 ./vendor/bin/sail artisan test --filter=Clase9IntegracionModulosTest
 ```
-**Resultado:** `8 passed (38 assertions)` ✅
+**Resultado:** `8 passed (38 assertions)`
 
 Suite completa del proyecto (Clase 7 + Clase 9 + ERP Core):
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `22 passed (4026 assertions)` ✅
+**Resultado:** `22 passed (4026 assertions)`
 
 ---
 
@@ -431,14 +431,14 @@ Se diseñaron plantillas optimizadas para DomPDF con HTML tabular y estilos CSS 
 
 | Módulo / Acción | Permiso Spatie | Admin | Almacenista | Vendedor | Cocinero |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| Ver Proveedores | `ver-proveedores` | ✅ | ✅ | ❌ | ❌ |
-| Crear Proveedores | `crear-proveedores` | ✅ | ✅ | ❌ | ❌ |
-| Editar Proveedores | `editar-proveedores` | ✅ | ✅ | ❌ | ❌ |
-| Eliminar Proveedores | `eliminar-proveedores` | ✅ | ❌ | ❌ | ❌ |
-| Ver Órdenes de Compra | `ver-compras` | ✅ | ✅ | ❌ | ❌ |
-| Crear Orden de Compra | `crear-compras` | ✅ | ✅ | ❌ | ❌ |
-| Recibir Mercancía en Bodega | `recibir-compras` | ✅ | ✅ | ❌ | ❌ |
-| Anular Orden de Compra | `eliminar-compras` | ✅ | ❌ | ❌ | ❌ |
+| Ver Proveedores | `ver-proveedores` | Sí | Sí | No | No |
+| Crear Proveedores | `crear-proveedores` | Sí | Sí | No | No |
+| Editar Proveedores | `editar-proveedores` | Sí | Sí | No | No |
+| Eliminar Proveedores | `eliminar-proveedores` | Sí | No | No | No |
+| Ver Órdenes de Compra | `ver-compras` | Sí | Sí | No | No |
+| Crear Orden de Compra | `crear-compras` | Sí | Sí | No | No |
+| Recibir Mercancía en Bodega | `recibir-compras` | Sí | Sí | No | No |
+| Anular Orden de Compra | `eliminar-compras` | Sí | No | No | No |
 
 ### 11.7. Guía de Verificación y Evidencias (Clase 10)
 
@@ -458,13 +458,13 @@ Suite específica de Clase 10:
 ```bash
 ./vendor/bin/sail artisan test --filter=Clase10ComprasPdfTest
 ```
-**Resultado:** `11 passed (31 assertions)` ✅
+**Resultado:** `11 passed (31 assertions)`
 
 Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + ERP Core):
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `33 passed (8025 assertions)` ✅
+**Resultado:** `33 passed (8025 assertions)`
 
 ---
 
@@ -560,13 +560,171 @@ Suite específica de Roles, Permisos y Rol Activo:
 ```bash
 ./vendor/bin/sail artisan test --filter=Clase10RolesPermisosAdicionalTest
 ```
-**Resultado:** `14 passed (49 assertions)` ✅
+**Resultado:** `14 passed (49 assertions)`
 
 Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + Guía Adicional SoD + ERP Core):
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `47 passed (13342 assertions)` ✅
+**Resultado:** `47 passed (13342 assertions)`
+
+---
+
+## 13. Auditoría, Trazabilidad y Kardex de Inventario (Clase 12)
+
+En cumplimiento de la **Guía Completa - Clase 12: Auditoría, Trazabilidad y Kardex de Inventario (COTECNOVA 2026)**, se implementó un sistema integral de control interno y auditoría forense para **QuickFood ERP**. La solución se fundamenta en dos pilares: la inmutabilidad de la bitácora de cambios (auditoría antes/después con `spatie/laravel-activitylog` v5) y el Kardex físico permanente como fuente única de verdad para las existencias en bodega (`inventory_movements` y `InventoryService`).
+
+### 13.1. Principios de Control Interno y Trazabilidad
+
+1. **Inmutabilidad de la Bitácora:** Todo registro en `activity_log` e `inventory_movements` es histórico e irreversible. No existen operaciones de actualización ni eliminación sobre estas tablas.
+2. **Desacoplamiento del Stock en Catálogo:** El campo `stock` de la tabla `productos` queda protegido contra modificaciones manuales arbitrarias en formularios web y API.
+3. **Punto Único de Control:** Toda variación física de inventario (entradas, salidas, aperturas o ajustes) debe transitar de manera obligatoria y atómica por `App\Services\InventoryService`.
+4. **Segregación y Autorización:** Las consultas de Kardex y bitácora, así como los ajustes manuales justificados, están subordinados a la matriz de permisos de Spatie (`ver-inventario`, `ajustar-inventario`, `ver-auditoria`).
+
+### 13.2. Bitácora de Auditoría Forense (`spatie/laravel-activitylog` v5)
+
+* **Versión y Configuración:** Instalación de `spatie/laravel-activitylog` versión 5.1.5, configurado para persistir las diferencias en la columna `attribute_changes` y conservar los nombres de bitácora según el módulo de negocio.
+* **Trait Reutilizable `Auditable` (`app/Models/Concerns/Auditable.php`):**
+  * Centraliza la configuración mediante `LogsActivity` y `LogOptions`.
+  * Registra atributos modificados (`logOnlyDirty()`) y almacena el estado previo y posterior (`dontSubmitEmptyLogs()`).
+  * Asigna dinámicamente el nombre de la bitácora según el modelo (`productos`, `categorias`, `clientes`, `proveedores`, `ventas`, `compras`).
+  * Genera descripciones humanas automáticas: `"Producto :subject.nombre fue :event"`, `"Venta :subject.invoice_number fue :event"`, etc.
+* **Modelos Auditados:**
+  * `Product` / `Producto`: Se auditan cambios en nombre, precio, categoría, descripción y estado. **Se excluye explícitamente el campo `stock`** (`logExcept(['stock'])`) para evitar duplicidad y desbordamiento de la bitácora, delegando su trazabilidad al Kardex.
+  * `Category` / `Categoria`: Cambios en nombre, descripción y estado.
+  * `Client` / `Cliente`: Cambios en identificación, nombre, correo, teléfono y dirección.
+  * `Provider`: Cambios en razón social, contacto, correo y estado.
+  * `Sale`: Emisión, cambios de estado y notas.
+  * `Purchase`: Emisión de OC, recepción y cambios de estado.
+  * `User`: Se auditan nombres, correo y estado de activación, **excluyendo estrictamente contraseñas** (`password`, `remember_token`).
+* **Bitácora de Seguridad (`activity('seguridad')`):**
+  * Integrada directamente en `AccessControlService`.
+  * Registra la asignación/remoción de roles a usuarios con lista comparativa (`roles_asignados`).
+  * Registra la concesión/revocación de permisos directos (`permisos_directos`).
+  * Registra la actualización de la matriz de permisos por rol (`permisos_actualizados`).
+
+### 13.3. Kardex de Inventario y Modelo de Datos (`inventory_movements`)
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   ARQUITECTURA DE KARDEX PERMANENTE                    │
+└────────────────────────────────────────────────────────────────────────┘
+
+  [ Compra Recibida ] ───► (entry)  ──┐
+  [ Venta Anulada ]   ───► (entry)  ──┤
+                                      ▼
+                               ┌──────────────────────┐
+                               │  InventoryService    │
+                               │  (lockForUpdate)     │
+                               └──────────┬───────────┘
+                                          │
+            ┌─────────────────────────────┼─────────────────────────────┐
+            ▼                             ▼                             ▼
+   ┌─────────────────┐           ┌─────────────────┐           ┌─────────────────┐
+   │ (entry / exit)  │           │   (adjust +/-)  │           │    (opening)    │
+   │  Compras/Ventas │           │  Conteo Físico  │           │ Saldo de Inicio │
+   └────────┬────────┘           └────────┬────────┘           └────────┬────────┘
+            │                             │                             │
+            └─────────────────────────────┼─────────────────────────────┘
+                                          ▼
+                         ┌───────────────────────────────────┐
+                         │       inventory_movements         │
+                         │ (stock_before, quantity, after)   │
+                         └─────────────────┬─────────────────┘
+                                           │
+                                           ▼
+                                 ┌───────────────────┐
+                                 │     productos     │
+                                 │   (stock final)   │
+                                 └───────────────────┘
+```
+
+#### Estructura de la Tabla `inventory_movements`:
+* `id`: Clave primaria autoincremental.
+* `product_id`: Llave foránea hacia `productos` con restricción de eliminación (`restrictOnDelete`).
+* `type`: Tipo de movimiento enumerado (`entry`, `exit`, `adjust`, `opening`).
+* `quantity`: Magnitud del movimiento (positivo en entradas y salidas; en ajustes refleja el diferencial con signo).
+* `stock_before`: Existencia física en bodega inmediatamente anterior al movimiento.
+* `stock_after`: Existencia física resultante en bodega posterior a la aplicación del movimiento.
+* `reference_type` / `reference_id`: Relación polimórfica hacia el documento de origen (`Sale`, `Purchase`, etc.), con soporte explícito para modelos con Soft Deletes (`withTrashed()`).
+* `concept`: Glosa descriptiva del movimiento (ej.: *"Venta #FV-00001"*, *"Recepción OC #OC-00003"*, *"Ajuste físico: Conteo mensual"*).
+* `user_id`: Llave foránea nullable al usuario responsable de la transacción.
+* `created_at`: Marca temporal exacta del movimiento.
+
+### 13.4. Servicio Centralizado `InventoryService`
+
+Ubicado en `app/Services/InventoryService.php`, gobierna todas las operaciones de bodega mediante transacciones (`DB::transaction`) y bloqueos pesimistas de concurrencia (`lockForUpdate`):
+1. **`entry(Product $product, int $quantity, ?Model $reference, string $concept, ?int $userId, ?float $unitCost)`:** Incrementa stock, registra movimiento de entrada y actualiza el costo unitario del producto si fue suministrado en la compra.
+2. **`exit(Product $product, int $quantity, ?Model $reference, string $concept, ?int $userId)`:** Valida disponibilidad suficiente; si `stock < quantity`, aborta arrojando `ValidationException`. Decrementa stock y registra movimiento de salida.
+3. **`adjust(Product $product, int $physicalStock, string $reason, ?int $userId)`:** Calcula la discrepancia entre el stock contable y el conteo físico real (`diff = physicalStock - stock`). Si hay diferencia, ajusta las unidades, registra movimiento de tipo `adjust` indicando el motivo justificado y actualiza el saldo final.
+4. **`opening(Product $product, int $initialStock, ?int $userId)`:** Establece el asiento inicial de inventario cuando un producto es dado de alta o se ejecuta el comando de inicialización.
+
+#### Integración en Flujos de Negocio:
+* **Ventas (`SaleService@register`):** Cada ítem vendido genera una salida en Kardex (`exit`) referenciando a la entidad `Sale`.
+* **Anulación de Ventas (`SaleController@destroy`):** Al anular la factura, el stock se repone registrando una entrada en Kardex (`entry`) con concepto *"Anulación de venta #..."*.
+* **Recepción de Compras (`PurchaseService@receive`):** Las unidades ingresadas al almacén generan una entrada en Kardex (`entry`) referenciando a la entidad `Purchase` y actualizando el costo unitario ponderado.
+
+### 13.5. Protección de Stock y Ajustes Físicos
+
+* **Protección contra Manipulación en Catálogo:**
+  * En `app/Http/Requests/UpdateProductoRequest.php` y `UpdateProductRequest.php`, el campo `stock` es descartado del payload antes de validar mediante `$this->request->remove('stock')` o se omite en las reglas de autorización.
+  * En las vistas de edición de productos (`productos/edit.blade.php`), el campo de existencias se presenta bloqueado (`readonly`) con un aviso explicativo y accesos directos al **Kardex** y al formulario de **Ajuste Físico**.
+* **Comando de Inicialización de Kardex:**
+  ```bash
+  php artisan kardex:inicializar
+  ```
+  Comando consola (`app/Console/Commands/InitializeKardex.php`) que inspecciona los productos existentes en la base de datos y, para aquellos que cuentan con stock y aún no tienen movimientos registrados, crea de forma automática el movimiento de apertura (`opening`).
+* **Form Request `StoreAdjustmentRequest`:**
+  * `physical_stock`: Obligatorio, numérico entero no negativo (`min:0`).
+  * `reason`: Obligatorio, cadena de texto explicativa con un mínimo riguroso de 10 caracteres (`min:10`).
+
+### 13.6. Controladores, Rutas y Vistas de Auditoría y Kardex
+
+* **`InventoryController`:**
+  * `kardex` (`GET /inventario/kardex`): Tabla cronológica de movimientos con filtros interactivos por producto, tipo de movimiento (`entry`, `exit`, `adjust`, `opening`), fecha inicial y fecha final, con paginación y balance acumulado.
+  * `exportPdf` (`GET /inventario/kardex/pdf`): Emisión del reporte oficial de Kardex físico en formato PDF mediante DomPDF en orientación horizontal (Landscape Letter), incluyendo encabezado institucional, desglose de entradas/salidas/saldos y firmas de auditoría.
+  * `adjustForm` (`GET /inventario/ajustar`) y `adjust` (`POST /inventario/ajustar`): Formulario reactivo para seleccionar producto, ingresar conteo físico verificado y redactar el motivo formal del ajuste.
+* **`AuditController`:**
+  * `index` (`GET /auditoria`): Visor centralizado de la bitácora de actividad forense con filtros por módulo funcional (`log_name`), tipo de evento (`created`, `updated`, `deleted`, etc.), usuario responsable y rango de fechas. Presenta un modal con el desglose JSON estructurado de valores anteriores vs. valores nuevos (`old` vs. `attributes`).
+* **Menú de Navegación (`layouts/app.blade.php`):**
+  * Acceso directo a **Kardex** bajo compuerta `@can('ver-inventario')`.
+  * Acceso directo a **Bitácora de Auditoría** bajo compuerta `@can('ver-auditoria')`.
+
+### 13.7. Matriz de Roles y Permisos (Clase 12)
+
+| Módulo / Acción | Permiso Spatie | Admin | Almacenista | Vendedor | Supervisor |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| Ver Kardex de Inventario | `ver-inventario` | Sí | Sí | No | Sí (si rol activo lo permite) |
+| Exportar Kardex a PDF | `ver-inventario` | Sí | Sí | No | Sí (si rol activo lo permite) |
+| Realizar Ajuste Físico | `ajustar-inventario` | Sí | Sí | No | No |
+| Ver Bitácora de Auditoría | `ver-auditoria` | Sí | No | No | No |
+
+### 13.8. Guía de Verificación y Evidencias de la Clase 12
+
+| Entregable Solicitado | Ruta o Acción para Demostrar en Vivo |
+| :--- | :--- |
+| **1. Comando Kardex Inicializar** | Ejecutar `./vendor/bin/sail artisan kardex:inicializar` en terminal. Muestra el número de productos sincronizados con movimiento `opening`. |
+| **2. Consulta de Kardex en Pantalla** | Ingresar a `http://localhost:8090/inventario/kardex` como `admin@test.com` o `almacenista@test.com`. Filtrar por producto o tipo de movimiento. |
+| **3. Exportación Oficial a PDF** | En la vista de Kardex, hacer clic en **"Exportar a PDF"** o abrir `http://localhost:8090/inventario/kardex/pdf?product_id=1`. Genera el PDF horizontal con formato contable. |
+| **4. Ajuste Físico de Stock** | Ingresar a `http://localhost:8090/inventario/ajustar`. Seleccionar un producto, digitar conteo físico y justificación ($\ge 10$ caracteres). El Kardex reflejará el movimiento `adjust` y el stock se actualizará. |
+| **5. Bloqueo de Edición Manual** | Intentar modificar el stock en `http://localhost:8090/productos/{id}/edit`. El campo está protegido y bloqueado (`readonly`). Si se envía por POST manipulado, el backend lo descarta. |
+| **6. Trazabilidad Automática en Compras y Ventas** | Crear una venta en `/sales/create`: aparece movimiento `exit` en Kardex. Recibir mercancía en `/purchases/{id}`: aparece movimiento `entry` con su costo unitario. Anular una venta: aparece movimiento `entry` de reposición. |
+| **7. Visor de Bitácora Forense** | Ingresar a `http://localhost:8090/auditoria` como Administrador. Ver el historial con usuario, evento y detalle de cambios antes vs. después. |
+| **8. Bitácora de Seguridad** | Modificar roles o permisos en `/configuracion/usuarios` o `/configuracion/permisos`. En `/auditoria` filtrar por módulo `seguridad` para comprobar el registro inmutable de la acción. |
+
+### 13.9. Certificación con Suite de Pruebas Automatizadas (56 Tests)
+
+Suite específica de Auditoría y Kardex (Clase 12):
+```bash
+./vendor/bin/sail artisan test --filter=Clase12AuditoriaKardexTest
+```
+**Resultado:** `9 passed (46 assertions)`
+
+Suite integral de todo el sistema (Clase 7 + Clase 9 + Clase 10 + Guía SoD + Clase 12 + ERP Core):
+```bash
+./vendor/bin/sail artisan test
+```
+**Resultado:** `56 passed (342 assertions)`
 
 ---
 *Desarrollado con dedicación y rigurosidad técnica para el Seminario RAD &bull; Cotecnova 2026.*
