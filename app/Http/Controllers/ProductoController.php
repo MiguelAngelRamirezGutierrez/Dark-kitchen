@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductoRequest;
 use App\Http\Requests\UpdateProductoRequest;
 use App\Models\Categoria;
+use App\Models\Product;
 use App\Models\Producto;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -69,9 +71,12 @@ class ProductoController extends Controller implements HasMiddleware
         return view('productos.create', compact('categorias'));
     }
 
-    public function store(StoreProductoRequest $request)
+    public function store(StoreProductoRequest $request, InventoryService $inventory)
     {
-        Producto::create($request->validated());
+        $producto = Producto::create($request->validated());
+
+        // Clase 12: registrar inventario inicial en el kardex
+        $inventory->opening(Product::find($producto->id));
 
         return redirect()->route('productos.index')
             ->with('success', 'Producto creado exitosamente.');

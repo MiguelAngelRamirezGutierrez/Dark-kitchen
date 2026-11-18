@@ -9,7 +9,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-lg font-bold text-slate-800">Modificar Producto</h2>
-            <p class="text-xs text-slate-500">Actualice precios, ingredientes o inventario del plato.</p>
+            <p class="text-xs text-slate-500">Actualice precios, ingredientes o disponibilidad del producto.</p>
         </div>
         <a href="{{ route('productos.index') }}" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm transition">
             <i class="fa-solid fa-arrow-left mr-1"></i> Volver a Productos
@@ -45,12 +45,26 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="precio" class="block font-semibold text-slate-700 mb-1">Precio de Venta (COP) <span class="text-rose-500">*</span></label>
-                    <input type="number" step="100" min="100" name="precio" id="precio" value="{{ old('precio', (int)$producto->precio) }}" required class="w-full rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                    <input type="number" step="0.01" min="0" name="precio" id="precio" value="{{ old('precio', $producto->precio) }}" required class="w-full rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-orange-500 focus:outline-none">
                 </div>
 
                 <div>
-                    <label for="stock" class="block font-semibold text-slate-700 mb-1">Stock Disponible <span class="text-rose-500">*</span></label>
-                    <input type="number" min="0" name="stock" id="stock" value="{{ old('stock', $producto->stock) }}" required class="w-full rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                    <label class="block font-semibold text-slate-700 mb-1">Stock Actual (Solo Lectura)</label>
+                    <div class="flex items-center space-x-3 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                        <span class="text-base font-bold text-slate-900">{{ $producto->stock }} unidades</span>
+                    </div>
+                    <div class="mt-1 space-x-3 text-xs">
+                        @can('ver-inventario')
+                            <a href="{{ route('inventory.kardex', ['product' => $producto->id]) }}" class="text-blue-600 hover:text-blue-800 underline font-semibold">
+                                <i class="fa-solid fa-boxes-stacked mr-1"></i>Ver kardex
+                            </a>
+                        @endcan
+                        @can('ajustar-inventario')
+                            <a href="{{ route('inventory.adjust', $producto) }}" class="text-orange-600 hover:text-orange-800 underline font-semibold">
+                                <i class="fa-solid fa-sliders mr-1"></i>Ajustar inventario
+                            </a>
+                        @endcan
+                    </div>
                 </div>
             </div>
 
