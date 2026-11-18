@@ -130,6 +130,20 @@
                     </a>
                 @endcan
 
+                @can('ver-inventario')
+                    <a href="{{ route('inventory.kardex') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('inventory.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <i class="fa-solid fa-boxes-stacked w-5 text-center"></i>
+                        <span>Kardex de Inventario</span>
+                    </a>
+                @endcan
+
+                @can('ver-auditoria')
+                    <a href="{{ route('audit.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('audit.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <i class="fa-solid fa-clipboard-check w-5 text-center"></i>
+                        <span>Auditoría & Bitácora</span>
+                    </a>
+                @endcan
+
                 @canany(['ver-usuarios', 'ver-roles', 'ver-permisos'])
                     <a href="{{ route('settings.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-lg transition {{ request()->routeIs('settings.*') ? 'bg-orange-600 text-white font-semibold shadow' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                         <i class="fa-solid fa-gear w-5 text-center"></i>
