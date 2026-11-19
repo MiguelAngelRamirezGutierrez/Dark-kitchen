@@ -11,8 +11,9 @@
 **Integrantes / Estudiantes:**  
 * **Miguel Ángel Ramírez Gutiérrez** &bull; [GitHub: @MiguelAngelRamirezGutierrez](https://github.com/MiguelAngelRamirezGutierrez)  
 * **Andrés Felipe Mejía Suaza** &bull; [GitHub: @NiquelAwol](https://github.com/NiquelAwol)  
-**Etiqueta Segundo Corte (Tag):** `avance-2`  
-**Documento Oficial de Avance 2:** [`docs/avance2/Avance2_QuickFood_Ramirez_Mejia.md`](docs/avance2/Avance2_QuickFood_Ramirez_Mejia.md)  
+**Etapa / Versión:** Entrega Final — Módulos Completos de Compras, Ventas, Roles, Permisos, Auditoría y Kardex (Clase 12)  
+**Etiquetas Git (Tags):** `avance-2` (Segundo Corte), `avance-final` (Tercer Corte)  
+**Documentación de Avances:** [`docs/avance2/Avance2_QuickFood_Ramirez_Mejia.md`](docs/avance2/Avance2_QuickFood_Ramirez_Mejia.md) y [`README.md`](README.md)  
 **Tecnologías:** Laravel 11/12, PHP 8.3/8.5, MySQL 8.4, Docker Desktop, Laravel Sail, Blade, Eloquent ORM, Tailwind CSS y Git.
 
 ---
@@ -54,23 +55,23 @@ Copie el archivo de ejemplo si no existe el `.env`:
 ```bash
 cp .env.example .env
 ```
-Asegúrese de que la sección de base de datos apunte al contenedor de Sail:
+Asegúrese de que la sección de base de datos apunte al contenedor de Sail y que los puertos coincidan con su entorno:
 ```env
 DB_CONNECTION=mysql
 DB_HOST=mysql
 DB_PORT=3306
-DB_DATABASE=quickfood_erp
+DB_DATABASE=laravel
 DB_USERNAME=sail
 DB_PASSWORD=password
-FORWARD_DB_PORT=3306
-APP_PORT=80
+FORWARD_DB_PORT=3315
+APP_PORT=8090
 ```
 
 ### Paso 3: Iniciar los Contenedores con Laravel Sail
 ```bash
 ./vendor/bin/sail up -d
 ```
-*(Los contenedores `quickfooderp-laravel.test-1` y `quickfooderp-mysql-1` iniciarán en segundo plano).*
+*(Los contenedores `dark-kitchen-main-laravel.test-1` y `dark-kitchen-main-mysql-1` iniciarán en segundo plano).*
 
 ### Paso 4: Generar la Clave de Aplicación (si es necesario)
 ```bash
@@ -78,16 +79,19 @@ APP_PORT=80
 ```
 
 ### Paso 5: Ejecutar Migraciones y Poblado de Datos (Seeders)
-Este comando creará las 7 tablas de negocio con sus restricciones e insertará **mínimo 10 registros coherentes por tabla**:
+Este comando creará la base de datos completa con sus restricciones, insertará los registros coherentes por tabla y sincronizará el inventario inicial en el Kardex:
 ```bash
 ./vendor/bin/sail artisan migrate:fresh --seed
+./vendor/bin/sail artisan kardex:inicializar
 ```
 
 ### Paso 6: Acceso al Sistema
 Abra su navegador web e ingrese a:
-* **URL del ERP:** [http://localhost](http://localhost) (o [http://127.0.0.1](http://127.0.0.1))
-* **Usuario Administrador:** `admin@quickfood.local`
-* **Contraseña:** `password123`
+* **URL del ERP:** [http://localhost:8090](http://localhost:8090) (o [http://localhost](http://localhost) si configuró `APP_PORT=80`).
+* **Credenciales de Acceso:**
+  * **Administrador Principal:** `admin@test.com` &bull; Contraseña: `password`
+  * **Administrador Alternativo:** `admin@quickfood.local` &bull; Contraseña: `password123`
+* **Conexión Externa a MySQL:** Puerto `3315` (Usuario: `sail`, Contraseña: `password`, Base de Datos: `laravel`).
 
 ---
 
@@ -141,6 +145,24 @@ Para consultar la documentación técnica completa:
 * **Diccionario de Datos:** [`docs/diccionario.md`](docs/diccionario.md)
 * **Diagrama MER en Alta Resolución:** [`docs/diagrama_mer.png`](docs/diagrama_mer.png) y [`docs/diagrama_mer.md`](docs/diagrama_mer.md)
 
+### 5.1. Arquitectura de Doble Capa: Operativa Gastronómica vs. Facturación Fiscal ERP
+
+El sistema integra dos capas de datos complementarias diseñadas para resolver dos necesidades críticas distintas dentro del ecosistema de una Dark Kitchen:
+
+1. **Capa Operativa de Cocina y Despacho (`Pedido`, `Cliente`, `Producto`):**
+   * **Propósito:** Gestión ágil de comandas de cocina y coordinación de entregas a domicilio en tiempo real.
+   * **Entidades:** `pedidos`, `pedido_detalles`, `clientes`, `domiciliarios`, `metodos_pago`.
+   * **Ciclo de Estados:** `Recibido` -> `Preparando` -> `Listo` -> `En camino` -> `Entregado` -> `Cancelado`.
+   * **Enfoque:** Tiempos de preparación, bolsas térmicas, direcciones de reparto y asignación de motorizados.
+
+2. **Capa Comercial, Contable y de Control Interno (`Sale`, `Client`, `Product`, `Purchase`, `InventoryMovement`):**
+   * **Propósito:** Gestión empresarial, control tributario, órdenes de compra a proveedores y Kardex físico formal.
+   * **Entidades:** `sales`, `sale_details`, `clients`, `providers`, `purchases`, `purchase_details`, `inventory_movements`, `activity_log`.
+   * **Características:** Consecutivo de facturación fiscal (`FV-XXXXX`), liquidación de IVA colombiano al 19%, compras con recepción física por entregas (`OC-XXXXX`), auditoría forense de cambios y Kardex con control de concurrencia (`lockForUpdate`).
+
+3. **Punto de Convergencia Unificado (Inventario Indivisible):**
+   * Ambas capas convergen en la tabla física de inventario `productos`. Mediante columnas virtuales y compatibilidad de modelos Eloquent (`Producto` / `Product`), ambos flujos operan sobre el mismo catálogo y stock en bodega, garantizando que una venta formal o una orden de cocina descuenten el mismo inventario real sin discrepancias.
+
 ---
 
 ## 6. Modelos Eloquent y Scopes
@@ -170,16 +192,15 @@ Esta guía describe el guion exacto para presentar y sustentar el proyecto con �
 | Minuto | Paso | Qué Demostrar / Qué Decir |
 | :---: | :--- | :--- |
 | **0 - 1** | **1. Empresa Elegida** | Explicar que se eligió **QuickFood**, una *Dark Kitchen* ficticia de comidas rápidas artesanales enfocada en preparación bajo comanda y servicio a domicilio. |
-| **1 - 2** | **2. Problema Identificado** | Cuellos de botella por órdenes en papel, descoordinación en ruta con domiciliarios, pedidos enviados a direcciones obsoletas y falta de control de stock en horas pico. |
-| **2 - 3** | **3. Procesos Identificados** | Mostrar el flujo: Cliente -> Pedido (Recibido) -> Preparación (Cocina) -> Empaque (Listo) -> Despacho (En camino) -> Entrega y Cobro. Mencionando el módulo futuro de compras de insumos. |
-| **3 - 4** | **4. Mostrar el MER** | Abrir [`docs/diagrama_mer.png`](docs/diagrama_mer.png) o [`docs/diagrama_mer.md`](docs/diagrama_mer.md). Explicar las 7 entidades de negocio, llaves primarias, foráneas y cardinalidad 1:N. |
-| **4 - 5** | **5. Mostrar Migraciones** | Abrir la carpeta `database/migrations/`. Explicar las restricciones `cascadeOnDelete()`, `nullOnDelete()`, tipos de datos `decimal(12,2)` e integridad referencial. |
-| **5 - 6** | **6. Mostrar Modelos y Relaciones** | Abrir `app/Models/Pedido.php` y `app/Models/Producto.php`. Enseñar las relaciones `belongsTo()`, `hasMany()`, y los Scopes (`scopePendientes()`, `scopeActivos()`). |
-| **6 - 7** | **7. Mostrar Datos en MySQL** | Ejecutar en terminal: `./vendor/bin/sail mysql` y correr `SELECT 'categorias', count(*) FROM categorias ...`. Demostrar que todas las tablas tienen mínimo 10 registros coherentes y reales. |
-| **7 - 8** | **8. Listado de Pedidos en el ERP** | Abrir el navegador en `http://localhost/pedidos`. Mostrar la tabla de pedidos, filtros por estado, paginación y explicar cómo el **Eager Loading** (`with(...)`) optimiza las consultas SQL. |
-| **8 - 9** | **9. Crear un Pedido** | Ir a `http://localhost/pedidos/create`. Seleccionar cliente (ver cómo se autocompleta la dirección), agregar productos con cantidades (ver cálculo en tiempo real de subtotales y total), guardar la orden y verificar que se descontó el stock. |
-| **9 - 9.5**| **10. Transición de Estados** | Abrir la comanda recién creada (`pedidos.show`). Presionar los botones de avance: `Recibido` -> `Preparando` -> `Listo` -> Asignar domiciliario -> `En camino` -> `Entregado`. |
-| **9.5 - 10**| **11. Pruebas Automatizadas** | Correr `./vendor/bin/sail artisan test` en la terminal para demostrar que los 7 tests con 185 aserciones pasan en verde (100% aprobado). |
+| **1 - 2** | **2. Problema y Solución** | Cuellos de botella operativos y falta de trazabilidad contable resueltos con un ERP integral: comandas de cocina, facturación DIAN, compras y Kardex permanente. |
+| **2 - 3** | **3. Arquitectura del Sistema** | Explicar la arquitectura de doble capa: Operación de Cocina (`pedidos`) y Facturación Fiscal/Inventario ERP (`sales`, `purchases`, `inventory_movements`), unificadas sobre el catálogo de `productos`. |
+| **3 - 4** | **4. Base de Datos y MER** | Mostrar las tablas en MySQL, integridad referencial (`restrictOnDelete` en Kardex, Soft Deletes en catálogo) y consistencia en migraciones. |
+| **4 - 5** | **5. Seguridad y Rol Activo** | Iniciar sesión como `supervisor@test.com` (`password`) y demostrar la Segregación de Funciones: exigir selección de rol activo (`vendedor` vs. `almacenista`). |
+| **5 - 6** | **6. Módulo Comercial y Ventas** | Crear una venta en `http://localhost:8090/sales/create` con cálculo de IVA 19% en tiempo real, bloqueo de concurrencia y descarga de factura en PDF. |
+| **6 - 7** | **7. Abastecimiento y Compras** | Mostrar orden de compra en `http://localhost:8090/purchases`, recepción física proporcional en bodega e incremento de stock. |
+| **7 - 8** | **8. Kardex y Control Físico** | Abrir `http://localhost:8090/inventario/kardex`, demostrar que el stock no se edita manualmente, realizar un ajuste físico justificado y exportar reporte oficial a PDF. |
+| **8 - 9** | **9. Bitácora de Auditoría** | Ingresar a `http://localhost:8090/auditoria` y mostrar la trazabilidad inmutable antes vs. después (`attribute_changes`) y la bitácora de seguridad. |
+| **9 - 10** | **10. Pruebas Automatizadas** | Correr `./vendor/bin/sail artisan test` en la terminal para demostrar que los **56 tests con 346 aserciones** pasan al 100% en verde. |
 
 ---
 
@@ -343,7 +364,7 @@ Suite completa del proyecto (Clase 7 + Clase 9 + ERP Core):
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `22 passed (4026 assertions)`
+**Resultado:** `22 passed (253 assertions)`
 
 ---
 
@@ -429,16 +450,16 @@ Se diseñaron plantillas optimizadas para DomPDF con HTML tabular y estilos CSS 
 
 ### 11.6. Matriz de Roles y Permisos (Spatie RBAC)
 
-| Módulo / Acción | Permiso Spatie | Admin | Almacenista | Vendedor | Cocinero |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| Ver Proveedores | `ver-proveedores` | Sí | Sí | No | No |
-| Crear Proveedores | `crear-proveedores` | Sí | Sí | No | No |
-| Editar Proveedores | `editar-proveedores` | Sí | Sí | No | No |
-| Eliminar Proveedores | `eliminar-proveedores` | Sí | No | No | No |
-| Ver Órdenes de Compra | `ver-compras` | Sí | Sí | No | No |
-| Crear Orden de Compra | `crear-compras` | Sí | Sí | No | No |
-| Recibir Mercancía en Bodega | `recibir-compras` | Sí | Sí | No | No |
-| Anular Orden de Compra | `eliminar-compras` | Sí | No | No | No |
+| Módulo / Acción | Permiso Spatie | Admin | Almacenista | Vendedor |
+| :--- | :--- | :---: | :---: | :---: |
+| Ver Proveedores | `ver-proveedores` | Sí | Sí | No |
+| Crear Proveedores | `crear-proveedores` | Sí | Sí | No |
+| Editar Proveedores | `editar-proveedores` | Sí | Sí | No |
+| Eliminar Proveedores | `eliminar-proveedores` | Sí | No | No |
+| Ver Órdenes de Compra | `ver-compras` | Sí | Sí | No |
+| Crear Orden de Compra | `crear-compras` | Sí | Sí | No |
+| Recibir Mercancía en Bodega | `recibir-compras` | Sí | Sí | No |
+| Anular Orden de Compra | `eliminar-compras` | Sí | No | No |
 
 ### 11.7. Guía de Verificación y Evidencias (Clase 10)
 
@@ -464,7 +485,7 @@ Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + ERP Core):
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `33 passed (8025 assertions)`
+**Resultado:** `33 passed (284 assertions)`
 
 ---
 
@@ -566,7 +587,7 @@ Suite completa del proyecto (Clase 7 + Clase 9 + Clase 10 + Guía Adicional SoD 
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `47 passed (13342 assertions)`
+**Resultado:** `47 passed (333 assertions)`
 
 ---
 
@@ -654,7 +675,7 @@ En cumplimiento de la **Guía Completa - Clase 12: Auditoría, Trazabilidad y Ka
 ### 13.4. Servicio Centralizado `InventoryService`
 
 Ubicado en `app/Services/InventoryService.php`, gobierna todas las operaciones de bodega mediante transacciones (`DB::transaction`) y bloqueos pesimistas de concurrencia (`lockForUpdate`):
-1. **`entry(Product $product, int $quantity, ?Model $reference, string $concept, ?int $userId, ?float $unitCost)`:** Incrementa stock, registra movimiento de entrada y actualiza el costo unitario del producto si fue suministrado en la compra.
+1. **`entry(Product $product, int $quantity, ?Model $reference, string $concept, ?int $userId, ?float $unitCost)`:** Incrementa stock, registra movimiento de entrada y almacena el costo unitario de adquisición (`unit_cost`) en el movimiento de Kardex para trazabilidad histórica contable por lote.
 2. **`exit(Product $product, int $quantity, ?Model $reference, string $concept, ?int $userId)`:** Valida disponibilidad suficiente; si `stock < quantity`, aborta arrojando `ValidationException`. Decrementa stock y registra movimiento de salida.
 3. **`adjust(Product $product, int $physicalStock, string $reason, ?int $userId)`:** Calcula la discrepancia entre el stock contable y el conteo físico real (`diff = physicalStock - stock`). Si hay diferencia, ajusta las unidades, registra movimiento de tipo `adjust` indicando el motivo justificado y actualiza el saldo final.
 4. **`opening(Product $product, int $initialStock, ?int $userId)`:** Establece el asiento inicial de inventario cuando un producto es dado de alta o se ejecuta el comando de inicialización.
@@ -662,7 +683,7 @@ Ubicado en `app/Services/InventoryService.php`, gobierna todas las operaciones d
 #### Integración en Flujos de Negocio:
 * **Ventas (`SaleService@register`):** Cada ítem vendido genera una salida en Kardex (`exit`) referenciando a la entidad `Sale`.
 * **Anulación de Ventas (`SaleController@destroy`):** Al anular la factura, el stock se repone registrando una entrada en Kardex (`entry`) con concepto *"Anulación de venta #..."*.
-* **Recepción de Compras (`PurchaseService@receive`):** Las unidades ingresadas al almacén generan una entrada en Kardex (`entry`) referenciando a la entidad `Purchase` y actualizando el costo unitario ponderado.
+* **Recepción de Compras (`PurchaseService@receive`):** Las unidades ingresadas al almacén generan una entrada en Kardex (`entry`) referenciando a la entidad `Purchase` y registrando el costo unitario de compra (`unit_cost`).
 
 ### 13.5. Protección de Stock y Ajustes Físicos
 
@@ -696,7 +717,7 @@ Ubicado en `app/Services/InventoryService.php`, gobierna todas las operaciones d
 | :--- | :--- | :---: | :---: | :---: | :---: |
 | Ver Kardex de Inventario | `ver-inventario` | Sí | Sí | No | Sí (si rol activo lo permite) |
 | Exportar Kardex a PDF | `ver-inventario` | Sí | Sí | No | Sí (si rol activo lo permite) |
-| Realizar Ajuste Físico | `ajustar-inventario` | Sí | Sí | No | No |
+| Realizar Ajuste Físico | `ajustar-inventario` | Sí | Sí | No | Sí (si rol activo es almacenista) |
 | Ver Bitácora de Auditoría | `ver-auditoria` | Sí | No | No | No |
 
 ### 13.8. Guía de Verificación y Evidencias de la Clase 12
@@ -724,7 +745,7 @@ Suite integral de todo el sistema (Clase 7 + Clase 9 + Clase 10 + Guía SoD + Cl
 ```bash
 ./vendor/bin/sail artisan test
 ```
-**Resultado:** `56 passed (342 assertions)`
+**Resultado:** `56 passed (346 assertions)`
 
 ---
 *Desarrollado con dedicación y rigurosidad técnica para el Seminario RAD &bull; Cotecnova 2026.*
