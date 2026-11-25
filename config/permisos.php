@@ -39,6 +39,7 @@ return [
         'ajustar' => 'Ajustar',
         'cambiar-estado' => 'Cambiar Estado',
         'exportar' => 'Exportar',
+        'importar' => 'Importar',
         'aprobar' => 'Aprobar',
     ],
 

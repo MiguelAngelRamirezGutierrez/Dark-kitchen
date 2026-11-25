@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomiciliarioController;
+use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MetodoPagoController;
 use App\Http\Controllers\PedidoController;
@@ -48,6 +49,13 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::middleware('auth')->group(function () {
     Route::get('rol-activo', [ActiveRoleController::class, 'edit'])->name('active-role.edit');
     Route::put('rol-activo', [ActiveRoleController::class, 'update'])->name('active-role.update');
+
+    // Excel: exportar e importar (Clase 13). Se declaran ANTES de Route::resource
+    Route::get('products/exportar', [ExcelController::class, 'exportProducts'])->name('products.export');
+    Route::get('products/importar', [ExcelController::class, 'importForm'])->name('products.import');
+    Route::post('products/importar', [ExcelController::class, 'import'])->name('products.import.store');
+    Route::get('products/plantilla', [ExcelController::class, 'template'])->name('products.template');
+    Route::get('sales/exportar', [ExcelController::class, 'exportSales'])->name('sales.export');
 
     // --- MÓDULO PRODUCTOS (Con Soft Deletes y Permisos) ---
     Route::patch('productos/{producto}/restore', [ProductoController::class, 'restore'])

@@ -56,6 +56,12 @@
             <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition">
                 <i class="fa-solid fa-filter mr-1"></i> Filtrar
             </button>
+            @can('exportar-ventas')
+                <a href="{{ route('sales.export', request()->only('from', 'to')) }}" class="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Exportar a Excel</span>
+                </a>
+            @endcan
             @if(request()->hasAny(['search', 'from', 'to']))
                 <a href="{{ route('sales.index') }}" class="text-xs text-slate-500 hover:text-slate-700 underline py-2">
                     Limpiar

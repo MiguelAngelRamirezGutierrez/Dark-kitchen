@@ -48,6 +48,9 @@ class RolePermissionSeeder extends Seeder
             // Inventario (kardex) y auditoría (Clase 12)
             'ver-inventario', 'ajustar-inventario',
             'ver-auditoria',
+
+            // Excel (Clase 13)
+            'exportar-productos', 'importar-productos', 'exportar-ventas',
         ];
 
         // findOrCreate: si el permiso ya existe no lo duplica
@@ -64,6 +67,7 @@ class RolePermissionSeeder extends Seeder
             'ver-clientes', 'crear-clientes', 'editar-clientes',
             'ver-ventas', 'crear-ventas',
             'ver-pedidos', 'crear-pedidos', 'cambiar-estado-pedidos',
+            'exportar-ventas',
         ]);
 
         // Rol Almacenista
@@ -74,6 +78,7 @@ class RolePermissionSeeder extends Seeder
             'ver-compras', 'crear-compras', 'recibir-compras',
             'ver-papelera',
             'ver-inventario', 'ajustar-inventario',
+            'exportar-productos', 'importar-productos',
         ]);
     }
 }

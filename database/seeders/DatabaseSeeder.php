@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             TestUserSeeder::class,
             CategoriaSeeder::class,
             ProductoSeeder::class,
+            ProductSeeder::class,
             ClienteSeeder::class,
             ClientSeeder::class,
             ProviderSeeder::class,

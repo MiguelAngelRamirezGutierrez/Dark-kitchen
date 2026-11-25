@@ -15,7 +15,7 @@ class Clase7RolesPermisosTest extends TestCase
     {
         parent::setUp();
         // Asegurar que el seeder de roles y permisos esté ejecutado
-        $this->seed(RolePermissionSeeder::class);
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
     }
 
     /**

@@ -68,6 +68,18 @@
         </form>
 
         <div class="flex items-center gap-2">
+            @can('exportar-productos')
+                <a href="{{ route('products.export', request()->only('buscar', 'search')) }}" class="inline-flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-300 shadow-sm transition">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>Exportar a Excel</span>
+                </a>
+            @endcan
+            @can('importar-productos')
+                <a href="{{ route('products.import') }}" class="inline-flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg border border-slate-300 shadow-sm transition">
+                    <i class="fa-solid fa-file-arrow-up text-blue-600"></i>
+                    <span>Importar desde Excel</span>
+                </a>
+            @endcan
             {{-- Pestaña de Papelera / Catálogo Activo (Paso 9) --}}
             @can('eliminar-productos')
                 @if ($showTrashed)
