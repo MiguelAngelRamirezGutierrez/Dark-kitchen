@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Services\AccessControlService;
-use App\Support\PermissionCatalog;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -15,7 +15,7 @@ class Clase10RolesPermisosAdicionalTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
         User::query()->update(['active' => true]);
     }
 

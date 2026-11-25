@@ -49,7 +49,7 @@ class AuthController extends Controller
             $request->session()->forget('active_role');
 
             return redirect()->intended(route('dashboard'))
-                ->with('success', 'Sesión iniciada correctamente como ' . Auth::user()->name);
+                ->with('success', 'Sesión iniciada correctamente como '.Auth::user()->name);
         }
 
         return back()->withErrors([
@@ -87,6 +87,6 @@ class AuthController extends Controller
         $request->session()->forget('active_role');
 
         return redirect()->route('dashboard')
-            ->with('success', "Has iniciado sesión rápidamente como {$user->name} (" . ($user->roles->first()?->name ?? 'sin rol') . ")");
+            ->with('success', "Has iniciado sesión rápidamente como {$user->name} (".($user->roles->first()?->name ?? 'sin rol').')');
     }
 }

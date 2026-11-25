@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Product;
 use App\Events\SaleRegistered;
+use App\Models\Product;
 use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -16,7 +16,7 @@ class SaleService
     /**
      * Registra una venta completa dentro de una transacción.
      *
-     * @param array $data ['client_id' => int, 'sale_date' => 'Y-m-d', 'notes' => string, 'items' => [['product_id' => int, 'quantity' => int], ...]]
+     * @param  array  $data  ['client_id' => int, 'sale_date' => 'Y-m-d', 'notes' => string, 'items' => [['product_id' => int, 'quantity' => int], ...]]
      */
     public function register(array $data, int $userId): Sale
     {
@@ -47,13 +47,13 @@ class SaleService
                     ]);
                 }
 
-                $lineSubtotal = (float)$product->price * $quantity;
+                $lineSubtotal = (float) $product->price * $quantity;
                 $subtotal += $lineSubtotal;
 
                 $items[] = [
                     'product' => $product,
                     'quantity' => $quantity,
-                    'unit_price' => (float)$product->price,
+                    'unit_price' => (float) $product->price,
                     'subtotal' => $lineSubtotal,
                 ];
             }

@@ -41,7 +41,7 @@ class ProductsImport implements SkipsOnFailure, ToCollection, WithHeadingRow, Wi
             if ($product) {
                 $product->update([
                     'descripcion' => $row['descripcion'] ?? $product->descripcion,
-                    'precio'      => $row['precio'],
+                    'precio' => $row['precio'],
                     'categoria_id' => $category->id,
                 ]);
                 $this->updated++;
@@ -50,12 +50,12 @@ class ProductsImport implements SkipsOnFailure, ToCollection, WithHeadingRow, Wi
             }
 
             $product = Product::create([
-                'nombre'      => trim((string) $row['nombre']),
+                'nombre' => trim((string) $row['nombre']),
                 'descripcion' => $row['descripcion'] ?? null,
-                'precio'      => $row['precio'],
-                'stock'       => (int) ($row['stock'] ?? 0),
+                'precio' => $row['precio'],
+                'stock' => (int) ($row['stock'] ?? 0),
                 'categoria_id' => $category->id,
-                'estado'      => true,
+                'estado' => true,
             ]);
 
             // El stock del archivo entra al kardex como «inventario inicial»

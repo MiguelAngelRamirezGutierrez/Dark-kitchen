@@ -2,14 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
-use App\Models\Category;
 use App\Models\Client;
-use App\Models\Cliente;
-use App\Models\Domiciliario;
 use App\Models\Pedido;
 use App\Models\Product;
-use App\Models\Producto;
 use App\Models\Provider;
 use App\Models\Purchase;
 use App\Models\Sale;
@@ -107,13 +102,13 @@ class DashboardController extends Controller
                 'icon' => 'fa-gear',
             ],
         ])->filter(function (array $module) use ($user) {
-            return !$user || $user->hasRole('admin') || $user->can($module['permission']);
+            return ! $user || $user->hasRole('admin') || $user->can($module['permission']);
         })->values();
 
         // 2. Indicadores Clave de Desempeño (KPIs - Paso 12 Guía Clase 9)
         $stats = collect();
 
-        if (!$user || $user->can('ver-productos') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-productos') || $user->hasRole('admin')) {
             $stats->push([
                 'label' => 'Productos activos',
                 'value' => Product::where('active', true)->count(),
@@ -128,13 +123,13 @@ class DashboardController extends Controller
             ]);
             $stats->push([
                 'label' => 'Valor del inventario',
-                'value' => '$ ' . number_format((float) Product::where('active', true)->sum(DB::raw('price * stock')), 0, ',', '.'),
+                'value' => '$ '.number_format((float) Product::where('active', true)->sum(DB::raw('price * stock')), 0, ',', '.'),
                 'icon' => 'fa-vault',
                 'color' => 'emerald',
             ]);
         }
 
-        if (!$user || $user->can('ver-clientes') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-clientes') || $user->hasRole('admin')) {
             $stats->push([
                 'label' => 'Clientes activos',
                 'value' => Client::where('active', true)->count(),
@@ -144,7 +139,7 @@ class DashboardController extends Controller
         }
 
         $sumSales = 0.0;
-        if (!$user || $user->can('ver-ventas') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-ventas') || $user->hasRole('admin')) {
             $salesThisMonth = Sale::whereMonth('sale_date', now()->month)
                 ->whereYear('sale_date', now()->year)
                 ->where('status', '!=', 'anulada');
@@ -154,14 +149,14 @@ class DashboardController extends Controller
 
             $stats->push([
                 'label' => 'Ventas del mes',
-                'value' => $countSales . ' ($ ' . number_format($sumSales, 0, ',', '.') . ')',
+                'value' => $countSales.' ($ '.number_format($sumSales, 0, ',', '.').')',
                 'icon' => 'fa-chart-line',
                 'color' => 'purple',
             ]);
         }
 
         // Proveedores activos (Clase 10)
-        if (!$user || $user->can('ver-proveedores') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-proveedores') || $user->hasRole('admin')) {
             $stats->push([
                 'label' => 'Proveedores activos',
                 'value' => Provider::where('active', true)->count(),
@@ -172,7 +167,7 @@ class DashboardController extends Controller
 
         // Compras y Órdenes por recibir (Clase 10)
         $sumPurchases = 0.0;
-        if (!$user || $user->can('ver-compras') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-compras') || $user->hasRole('admin')) {
             $purchasesThisMonth = Purchase::whereMonth('purchase_date', now()->month)
                 ->whereYear('purchase_date', now()->year)
                 ->where('status', '!=', 'anulada');
@@ -182,7 +177,7 @@ class DashboardController extends Controller
 
             $stats->push([
                 'label' => 'Compras del mes',
-                'value' => $countPurchases . ' ($ ' . number_format($sumPurchases, 0, ',', '.') . ')',
+                'value' => $countPurchases.' ($ '.number_format($sumPurchases, 0, ',', '.').')',
                 'icon' => 'fa-truck-ramp-box',
                 'color' => 'orange',
             ]);
@@ -197,11 +192,11 @@ class DashboardController extends Controller
         }
 
         // Margen Bruto Mes (Ventas - Compras)
-        if (!$user || $user->hasRole('admin') || ($user->can('ver-ventas') && $user->can('ver-compras'))) {
+        if (! $user || $user->hasRole('admin') || ($user->can('ver-ventas') && $user->can('ver-compras'))) {
             $margin = $sumSales - $sumPurchases;
             $stats->push([
                 'label' => 'Margen mensual (Vtas - Cps)',
-                'value' => '$ ' . number_format($margin, 0, ',', '.'),
+                'value' => '$ '.number_format($margin, 0, ',', '.'),
                 'icon' => 'fa-scale-balanced',
                 'color' => $margin >= 0 ? 'emerald' : 'rose',
             ]);
@@ -209,13 +204,13 @@ class DashboardController extends Controller
 
         // 3. Top 5 productos más vendidos del mes actual (Paso 12 Guía Clase 9)
         $topProducts = collect();
-        if (!$user || $user->can('ver-reportes') || $user->can('ver-ventas') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-reportes') || $user->can('ver-ventas') || $user->hasRole('admin')) {
             $topProducts = SaleDetail::query()
                 ->select('product_id', DB::raw('SUM(quantity) as total_sold'))
                 ->whereHas('sale', function ($q) {
                     $q->whereMonth('sale_date', now()->month)
-                      ->whereYear('sale_date', now()->year)
-                      ->where('status', '!=', 'anulada');
+                        ->whereYear('sale_date', now()->year)
+                        ->where('status', '!=', 'anulada');
                 })
                 ->with('product:id,nombre,name,precio,price')
                 ->groupBy('product_id')
@@ -226,7 +221,7 @@ class DashboardController extends Controller
 
         // 4. Insumos y Productos con Stock Bajo para Reabastecimiento (Clase 10)
         $reorderProducts = collect();
-        if (!$user || $user->can('ver-productos') || $user->can('ver-compras') || $user->hasRole('admin')) {
+        if (! $user || $user->can('ver-productos') || $user->can('ver-compras') || $user->hasRole('admin')) {
             $reorderProducts = Product::where('active', true)
                 ->where('stock', '<=', 5)
                 ->orderBy('stock')

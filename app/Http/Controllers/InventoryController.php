@@ -93,9 +93,9 @@ class InventoryController extends Controller implements HasMiddleware
 
         return [
             'entradas' => (int) (clone $query)->where('type', 'entrada')->sum('quantity'),
-            'salidas'  => (int) (clone $query)->where('type', 'salida')->sum('quantity'),
+            'salidas' => (int) (clone $query)->where('type', 'salida')->sum('quantity'),
             // Regla de control: el último saldo del kardex debe coincidir con el stock del producto
-            'cuadra'   => (int) ($product->movements()->latest('id')->value('balance') ?? 0) === (int) $product->stock,
+            'cuadra' => (int) ($product->movements()->latest('id')->value('balance') ?? 0) === (int) $product->stock,
         ];
     }
 }

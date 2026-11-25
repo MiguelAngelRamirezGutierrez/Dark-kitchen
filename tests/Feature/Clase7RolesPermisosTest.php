@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\User;
-use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -15,7 +15,7 @@ class Clase7RolesPermisosTest extends TestCase
     {
         parent::setUp();
         // Asegurar que el seeder de roles y permisos esté ejecutado
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     /**

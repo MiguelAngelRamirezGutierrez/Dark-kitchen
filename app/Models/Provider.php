@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Models\Concerns\Auditable;
+use Database\Factories\ProviderFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
 {
-    use Auditable, SoftDeletes;
+    /** @use HasFactory<ProviderFactory> */
+    use Auditable, HasFactory, SoftDeletes;
 
     // Auditoría (Clase 12)
     protected string $auditLog = 'proveedores';

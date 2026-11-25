@@ -17,7 +17,7 @@ class AccessControlService
     /**
      * Crea o actualiza un usuario con sus roles y permisos directos, dentro de una transacción.
      *
-     * @param array $data ['name', 'email', 'password'?, 'active', 'roles' => [...], 'permissions' => [...]]
+     * @param  array  $data  ['name', 'email', 'password'?, 'active', 'roles' => [...], 'permissions' => [...]]
      */
     public function saveUser(User $user, array $data, User $actor): User
     {

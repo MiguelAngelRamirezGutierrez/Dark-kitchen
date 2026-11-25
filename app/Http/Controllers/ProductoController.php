@@ -47,7 +47,7 @@ class ProductoController extends Controller implements HasMiddleware
             $buscar = $request->string('buscar');
             $query->where(function ($q) use ($buscar) {
                 $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('descripcion', 'like', "%{$buscar}%");
+                    ->orWhere('descripcion', 'like', "%{$buscar}%");
             });
         }
 
@@ -68,6 +68,7 @@ class ProductoController extends Controller implements HasMiddleware
     public function create()
     {
         $categorias = Categoria::activos()->orderBy('nombre')->get();
+
         return view('productos.create', compact('categorias'));
     }
 
@@ -85,6 +86,7 @@ class ProductoController extends Controller implements HasMiddleware
     public function edit(Producto $producto)
     {
         $categorias = Categoria::activos()->orderBy('nombre')->get();
+
         return view('productos.edit', compact('producto', 'categorias'));
     }
 

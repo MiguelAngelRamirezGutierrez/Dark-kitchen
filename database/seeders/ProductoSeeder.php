@@ -17,9 +17,10 @@ class ProductoSeeder extends Seeder
 
         $cat = function (string $nombre) use ($categorias): int {
             $id = $categorias->get($nombre);
-            if (!$id) {
+            if (! $id) {
                 throw new \RuntimeException("Categoría '{$nombre}' no encontrada. Ejecute CategoriaSeeder primero.");
             }
+
             return $id;
         };
 

@@ -16,7 +16,6 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductoController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;

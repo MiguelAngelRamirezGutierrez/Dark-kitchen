@@ -7,8 +7,6 @@ use App\Models\Client;
 use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\Provider;
-use App\Models\Purchase;
-use App\Models\Sale;
 use App\Models\User;
 use App\Services\AccessControlService;
 use App\Services\InventoryService;
@@ -17,7 +15,6 @@ use App\Services\SaleService;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\TestUserSeeder;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Validation\ValidationException;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -27,8 +24,11 @@ class Clase12AuditoriaKardexTest extends TestCase
     use DatabaseTransactions;
 
     protected User $admin;
+
     protected User $almacenista;
+
     protected User $vendedor;
+
     protected Category $category;
 
     protected function setUp(): void

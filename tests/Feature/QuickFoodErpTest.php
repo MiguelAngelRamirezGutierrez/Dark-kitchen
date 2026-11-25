@@ -9,7 +9,8 @@ use App\Models\MetodoPago;
 use App\Models\Pedido;
 use App\Models\PedidoDetalle;
 use App\Models\Producto;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Tests\TestCase;
 
 class QuickFoodErpTest extends TestCase
@@ -17,8 +18,8 @@ class QuickFoodErpTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
-        $admin = \App\Models\User::where('email', 'admin@test.com')->orWhere('email', 'admin@quickfood.local')->first();
+        $this->seed(DatabaseSeeder::class);
+        $admin = User::where('email', 'admin@test.com')->orWhere('email', 'admin@quickfood.local')->first();
         if ($admin) {
             $this->actingAs($admin);
         }
@@ -95,7 +96,7 @@ class QuickFoodErpTest extends TestCase
         // Producto::activos()
         $activos = Producto::activos()->get();
         foreach ($activos as $prod) {
-            $this->assertTrue((bool)$prod->estado);
+            $this->assertTrue((bool) $prod->estado);
         }
 
         // Producto::conStock()
@@ -134,7 +135,7 @@ class QuickFoodErpTest extends TestCase
         $precioEsperado = $producto->precio;
         $totalEsperado = $precioEsperado * $cantidadPedida;
 
-        $uniqueAddress = 'Calle 100 # 20-30 Casa 5, Barrio Central - ' . uniqid();
+        $uniqueAddress = 'Calle 100 # 20-30 Casa 5, Barrio Central - '.uniqid();
 
         $response = $this->post(route('pedidos.store'), [
             'cliente_id' => $cliente->id,
@@ -146,7 +147,7 @@ class QuickFoodErpTest extends TestCase
                 [
                     'producto_id' => $producto->id,
                     'cantidad' => $cantidadPedida,
-                ]
+                ],
             ],
         ]);
 
@@ -156,14 +157,14 @@ class QuickFoodErpTest extends TestCase
         $pedidoCreado = Pedido::where('direccion_entrega', $uniqueAddress)->first();
         $this->assertNotNull($pedidoCreado);
         $this->assertEquals('Recibido', $pedidoCreado->estado);
-        $this->assertEquals((float)$totalEsperado, (float)$pedidoCreado->total);
+        $this->assertEquals((float) $totalEsperado, (float) $pedidoCreado->total);
 
         // Verificar que el detalle se creó con los valores exactos
         $detalleCreado = PedidoDetalle::where('pedido_id', $pedidoCreado->id)->first();
         $this->assertNotNull($detalleCreado);
         $this->assertEquals($producto->id, $detalleCreado->producto_id);
         $this->assertEquals($cantidadPedida, $detalleCreado->cantidad);
-        $this->assertEquals((float)$totalEsperado, (float)$detalleCreado->subtotal);
+        $this->assertEquals((float) $totalEsperado, (float) $detalleCreado->subtotal);
 
         // Verificar decremento de stock en el producto
         $productoActualizado = $producto->fresh();

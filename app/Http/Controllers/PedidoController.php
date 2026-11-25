@@ -31,10 +31,10 @@ class PedidoController extends Controller
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
                 $q->where('id', $buscar)
-                  ->orWhereHas('cliente', function ($cq) use ($buscar) {
-                      $cq->where('nombre', 'like', "%{$buscar}%")
-                         ->orWhere('telefono', 'like', "%{$buscar}%");
-                  });
+                    ->orWhereHas('cliente', function ($cq) use ($buscar) {
+                        $cq->where('nombre', 'like', "%{$buscar}%")
+                            ->orWhere('telefono', 'like', "%{$buscar}%");
+                    });
             });
         }
 
@@ -165,7 +165,7 @@ class PedidoController extends Controller
         $request->validate([
             'domiciliario_id' => 'nullable|exists:domiciliarios,id',
             'direccion_entrega' => 'required|string|max:255',
-            'estado' => 'required|in:' . implode(',', Pedido::ESTADOS),
+            'estado' => 'required|in:'.implode(',', Pedido::ESTADOS),
             'observaciones' => 'nullable|string|max:500',
         ]);
 
@@ -197,7 +197,7 @@ class PedidoController extends Controller
     public function cambiarEstado(Request $request, Pedido $pedido)
     {
         $request->validate([
-            'estado' => 'required|in:' . implode(',', Pedido::ESTADOS),
+            'estado' => 'required|in:'.implode(',', Pedido::ESTADOS),
             'domiciliario_id' => 'nullable|exists:domiciliarios,id',
         ]);
 
@@ -229,7 +229,7 @@ class PedidoController extends Controller
     public function destroy(Pedido $pedido)
     {
         // Si no estaba cancelado ni entregado, reponer stock antes de eliminar
-        if (!in_array($pedido->estado, ['Cancelado', 'Entregado'])) {
+        if (! in_array($pedido->estado, ['Cancelado', 'Entregado'])) {
             foreach ($pedido->detalles as $detalle) {
                 $detalle->producto->increment('stock', $detalle->cantidad);
             }

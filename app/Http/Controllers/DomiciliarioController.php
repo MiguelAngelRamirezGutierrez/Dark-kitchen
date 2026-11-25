@@ -15,9 +15,9 @@ class DomiciliarioController extends Controller
             $buscar = $request->buscar;
             $query->where(function ($q) use ($buscar) {
                 $q->where('nombre', 'like', "%{$buscar}%")
-                  ->orWhere('telefono', 'like', "%{$buscar}%")
-                  ->orWhere('documento', 'like', "%{$buscar}%")
-                  ->orWhere('vehiculo', 'like', "%{$buscar}%");
+                    ->orWhere('telefono', 'like', "%{$buscar}%")
+                    ->orWhere('documento', 'like', "%{$buscar}%")
+                    ->orWhere('vehiculo', 'like', "%{$buscar}%");
             });
         }
 

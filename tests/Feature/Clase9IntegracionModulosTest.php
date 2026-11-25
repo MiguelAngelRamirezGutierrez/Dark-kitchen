@@ -6,9 +6,9 @@ use App\Models\Category;
 use App\Models\Client;
 use App\Models\Product;
 use App\Models\Sale;
-use App\Models\SaleDetail;
 use App\Models\User;
 use App\Services\SaleService;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -17,7 +17,7 @@ class Clase9IntegracionModulosTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     /**
@@ -44,7 +44,7 @@ class Clase9IntegracionModulosTest extends TestCase
                 [
                     'product_id' => $product->id,
                     'quantity' => $quantity,
-                ]
+                ],
             ],
         ], $admin->id);
 
@@ -89,7 +89,7 @@ class Clase9IntegracionModulosTest extends TestCase
                     [
                         'product_id' => $product->id,
                         'quantity' => $requestedQuantity,
-                    ]
+                    ],
                 ],
             ], $admin->id);
 
@@ -113,7 +113,7 @@ class Clase9IntegracionModulosTest extends TestCase
         $category = Category::first();
         $product = Product::create([
             'categoria_id' => $category->id,
-            'nombre' => 'Producto Inactivo Test ' . uniqid(),
+            'nombre' => 'Producto Inactivo Test '.uniqid(),
             'descripcion' => 'Prueba inactivo',
             'precio' => 12000,
             'stock' => 10,
@@ -128,7 +128,7 @@ class Clase9IntegracionModulosTest extends TestCase
             'client_id' => $client->id,
             'sale_date' => now()->format('Y-m-d'),
             'items' => [
-                ['product_id' => $product->id, 'quantity' => 1]
+                ['product_id' => $product->id, 'quantity' => 1],
             ],
         ], $admin->id);
     }
@@ -148,7 +148,7 @@ class Clase9IntegracionModulosTest extends TestCase
             'client_id' => $client->id,
             'sale_date' => now()->format('Y-m-d'),
             'items' => [
-                ['product_id' => $product->id, 'quantity' => 1]
+                ['product_id' => $product->id, 'quantity' => 1],
             ],
         ], $admin->id);
 
@@ -177,7 +177,7 @@ class Clase9IntegracionModulosTest extends TestCase
             'client_id' => $client->id,
             'sale_date' => now()->format('Y-m-d'),
             'items' => [
-                ['product_id' => $product->id, 'quantity' => $quantity]
+                ['product_id' => $product->id, 'quantity' => $quantity],
             ],
         ], $admin->id);
 

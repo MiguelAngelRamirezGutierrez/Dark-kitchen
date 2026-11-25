@@ -27,11 +27,11 @@ trait Auditable
             ->dontLogEmptyChanges()              // si no cambió nada, no registra
             ->useLogName($this->auditLog ?? $this->getTable())
             ->setDescriptionForEvent(fn (string $event) => match ($event) {
-                'created'  => 'creado',
-                'updated'  => 'actualizado',
-                'deleted'  => 'eliminado',
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
                 'restored' => 'restaurado',
-                default    => $event,
+                default => $event,
             });
     }
 }

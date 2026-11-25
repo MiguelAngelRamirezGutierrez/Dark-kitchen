@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Product;
 use App\Events\PurchaseReceived;
+use App\Models\Product;
 use App\Models\Purchase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -17,8 +17,8 @@ class PurchaseService
      * Registra una ORDEN DE COMPRA (estado "pendiente"). Todavía NO mueve el inventario:
      * el stock solo aumenta cuando la mercancía llega físicamente (método receive).
      *
-     * @param array $data ['provider_id' => int, 'purchase_date' => 'Y-m-d', 'provider_invoice' => ?string, 'notes' => ?string,
-     *                     'items' => [['product_id' => int, 'quantity' => int, 'unit_cost' => float], ...]]
+     * @param  array  $data  ['provider_id' => int, 'purchase_date' => 'Y-m-d', 'provider_invoice' => ?string, 'notes' => ?string,
+     *                       'items' => [['product_id' => int, 'quantity' => int, 'unit_cost' => float], ...]]
      */
     public function register(array $data, int $userId): Purchase
     {
@@ -69,7 +69,7 @@ class PurchaseService
     /**
      * Registra la RECEPCIÓN (total o parcial) de la mercancía y AUMENTA el stock.
      *
-     * @param array $quantities [id_del_detalle => cantidad_que_llega, ...]
+     * @param  array  $quantities  [id_del_detalle => cantidad_que_llega, ...]
      */
     public function receive(Purchase $purchase, array $quantities, ?string $providerInvoice = null): Purchase
     {

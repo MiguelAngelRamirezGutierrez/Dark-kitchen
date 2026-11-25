@@ -11,7 +11,7 @@
 **Integrantes / Estudiantes:**  
 * **Miguel Ángel Ramírez Gutiérrez** &bull; [GitHub: @MiguelAngelRamirezGutierrez](https://github.com/MiguelAngelRamirezGutierrez)  
 * **Andrés Felipe Mejía Suaza** &bull; [GitHub: @NiquelAwol](https://github.com/NiquelAwol)  
-**Etapa / Versión:** Entrega Final — Módulos Completos de Compras, Ventas, Roles, Permisos, Auditoría y Kardex (Clase 12)  
+**Etapa / Versión:** Entrega Final Completa — Módulos Operativos, API REST, Excel, Automatización de Procesos, Pruebas Automatizadas y CI/CD (Clases 1 a 15)  
 **Etiquetas Git (Tags):** `avance-2` (Segundo Corte), `avance-final` (Tercer Corte)  
 **Documentación de Avances:** [`docs/avance2/Avance2_QuickFood_Ramirez_Mejia.md`](docs/avance2/Avance2_QuickFood_Ramirez_Mejia.md) y [`README.md`](README.md)  
 **Tecnologías:** Laravel 11/12, PHP 8.3/8.5, MySQL 8.4, Docker Desktop, Laravel Sail, Blade, Eloquent ORM, Tailwind CSS y Git.
@@ -746,6 +746,250 @@ Suite integral de todo el sistema (Clase 7 + Clase 9 + Clase 10 + Guía SoD + Cl
 ./vendor/bin/sail artisan test
 ```
 **Resultado:** `56 passed (346 assertions)`
+
+---
+
+
+---
+
+## 14. Clase 13 / Sesión 16 — API REST con Laravel Sanctum y Exportación/Importación en Excel
+
+Esta fase extiende la interoperabilidad del ERP tanto para integraciones externas (aplicaciones móviles, plataformas de reparto, canales B2B) mediante una **API RESTful v1** autenticada por tokens de **Laravel Sanctum**, como para la gestión masiva de datos mediante hojas de cálculo en formato **Excel (.xlsx)** con el paquete `maatwebsite/excel`.
+
+### 14.1. Arquitectura de la API REST (v1)
+
+* **Autenticación Basada en Tokens (`Laravel Sanctum`):**
+  * `POST /api/v1/login`: Autentica al usuario mediante correo y contraseña. Si el usuario cuenta con múltiples roles, permite especificar el rol activo deseado (`role`); el token emitido asocia las *abilities* del rol seleccionado y la sesión del usuario queda sincronizada. Retorna el token Bearer en texto plano, expiración y perfil.
+  * `GET /api/v1/me`: Inspecciona el perfil del usuario autenticado, su rol activo actual y la lista exhaustiva de permisos otorgados.
+  * `POST /api/v1/logout`: Revoca y destruye el token de acceso actual en la tabla `personal_access_tokens`.
+* **Catálogo de Productos (`Api\ProductController`):**
+  * `GET /api/v1/products`: Listado paginado con soporte de búsqueda en tiempo real (`?search=`), filtrado de productos activos e inclusión de stock.
+  * `GET /api/v1/products/{id}`: Detalle individual estructurado a través de `ProductResource`.
+* **Registro y Consulta de Ventas (`Api\SaleController`):**
+  * `POST /api/v1/sales`: Endpoint transaccional protegido por el permiso `crear-ventas`. Reutiliza el servicio de dominio centralizado `SaleService`, garantizando bloqueo pesimista contra sobreventa, cálculo de IVA (19%), numeración secuencial de facturas (`FV-XXXXX`), descuento de existencias y registro en el Kardex.
+  * `GET /api/v1/sales/{id}`: Detalle completo de la venta, cliente, usuario y líneas de detalle formateado mediante `SaleResource`.
+
+### 14.2. Exportación e Importación Masiva en Excel
+
+* **Exportaciones (`app/Exports/`):**
+  * **Productos (`ProductsExport`):** Descarga en `GET /products/exportar` bajo permiso `exportar-productos`. Incluye ID, Nombre, Categoría, Precio, Stock y Estado con estilos y encabezados enriquecidos.
+  * **Plantilla de Importación (`ProductsTemplateExport`):** Descarga en `GET /products/plantilla` con columnas normalizadas y filas de ejemplo para facilitar la carga al usuario.
+  * **Ventas (`SalesExport`):** Descarga en `GET /sales/exportar` bajo permiso `exportar-ventas`. Consolida número de factura, cliente, fecha, subtotal, IVA, total y estado.
+* **Importación con Validaciones Rigurosas (`app/Imports/ProductsImport.php`):**
+  * Procesamiento en `POST /products/importar` gestionado por `ImportProductsRequest` (máximo 10 MB, formatos `.xlsx`, `.xls`, `.csv`).
+  * Implementa `WithHeadingRow`, `WithValidation` y `SkipsFailures`.
+  * Valida que la categoría exista en la base de datos (`Rule::exists('categorias', 'nombre')`), que el precio sea numérico mayor a cero y que el nombre sea obligatorio.
+  * **Estrategia de Upsert Seguro:** Si el producto ya existe en catálogo, actualiza su nombre, descripción, precio y estado, **pero preserva intacto su stock contable** (el inventario solo se modifica por compras, ventas, anulaciones o ajustes físicos). Si el producto es nuevo, crea el registro y asienta el stock inicial en el Kardex mediante `InventoryService::opening()`.
+
+### 14.3. Pruebas Automatizadas y Colección Postman
+
+* **Suite de Pruebas Feature (`tests/Feature/Clase13Test.php`):**
+  * `test_login_y_rol_activo_en_la_api`: Valida login, emisión de token Sanctum y sincronización de rol activo.
+  * `test_productos_por_api`: Comprueba listado, paginación y búsqueda JSON.
+  * `test_crear_venta_por_api_reutiliza_el_servicio`: Verifica creación de venta, validación de stock y respuesta 201 Created.
+  * `test_exportar_a_excel`: Verifica descargas de Excel con Content-Type y cabeceras correctas.
+  * `test_importar_productos_con_filas_invalidas`: Valida rechazo y reporte de errores fila por fila.
+  * **Resultado:** `5 passed (72 assertions)`.
+* **Colección Postman y Newman (`docs/api/`):**
+  * `docs/api/ERP_API.postman_collection.json`: 23 peticiones HTTP organizadas por módulos (Auth, Productos, Ventas, Errores).
+  * `docs/api/ERP_Local.postman_environment.json`: Variables de entorno (`base_url`, `token`, `product_id`, etc.).
+  * Certificación externa con **Newman CLI**: **23/23 requests ejecutados con 68 aserciones exitosas al 100%**.
+
+---
+
+## 15. Clase 14 / Sesión 17 — Automatización de Procesos: Eventos, Notificaciones, Colas y Schedule
+
+Esta sesión incorpora arquitectura guiada por eventos (*Event-Driven Architecture*), procesamiento en segundo plano (*Queues*), notificaciones multicanal (Correo electrónico vía SMTP/Mailpit y Base de Datos) y tareas programadas en el servidor (*Task Scheduling*).
+
+### 15.1. Eventos de Dominio y Despacho Seguro
+
+* **`SaleRegistered` (`app/Events/SaleRegistered.php`):**
+  * Disparado automáticamente al completarse exitosamente una venta dentro de `SaleService::register()`.
+  * Implementa `ShouldDispatchAfterCommit` para garantizar que los escuchadores solo se ejecuten cuando la transacción de base de datos haya realizado `COMMIT`.
+* **`PurchaseReceived` (`app/Events/PurchaseReceived.php`):**
+  * Disparado en `PurchaseService::receive()` cuando se recepciona mercancía de una orden de compra, indicando si la recepción fue total o parcial.
+
+### 15.2. Escuchadores (Listeners) y Notificaciones Multicanal
+
+* **Control de Stock Crítico (`CheckLowStock` &bull; `LowStockNotification`):**
+  * Escucha `SaleRegistered`. Inspecciona cada producto involucrado en la venta.
+  * **Regla Antispam:** Solo dispara la alerta cuando el stock cruza el umbral crítico configurado en `config('erp.low_stock_threshold', 5)` (es decir, cuando antes de la venta superaba el umbral y tras ella quedó en <= 5).
+  * Notifica de forma asíncrona (`ShouldQueue`) a través de canales `mail` y `database` a todos los usuarios activos que posean el permiso `crear-compras`.
+* **Aviso de Recepción de Compra (`NotifyPurchaseReceived` &bull; `PurchaseReceivedNotification`):**
+  * Escucha `PurchaseReceived`.
+  * Notifica al usuario que creó la orden de compra original informándole el ingreso de la mercancía.
+  * Genera en memoria y adjunta dinámicamente el documento PDF oficial de la orden (`OC-XXXXX.pdf`) en el correo electrónico y registra la notificación en base de datos.
+* **Resumen Diario de Operaciones (`SendDailySummary` &bull; `DailySummaryNotification`):**
+  * Comando consola `php artisan erp:resumen-diario`.
+  * Consolida las métricas del día: total de ventas facturadas, recaudo bruto, compras recibidas y productos actualmente con existencias críticas.
+  * Se despacha vía correo electrónico a todos los usuarios activos con permiso `ver-reportes`.
+
+### 15.3. Interfaz de Notificaciones y Centro de Alertas
+
+* **Campana en Navbar (`resources/views/layouts/app.blade.php`):**
+  * Indicador visual con contador reactivo de notificaciones no leídas (`unreadNotifications->count()`).
+  * Despliega enlace directo al panel central con el atributo `title="Notificaciones"`.
+* **Bandeja Centralizada (`NotificationController` &bull; `resources/views/notifications/index.blade.php`):**
+  * `GET /notificaciones`: Listado paginado de todas las alertas con diferenciación gráfica por severidad (stock bajo, recepción de compras, resumen).
+  * `POST /notificaciones/{id}`: Marca una notificación como leída y redirige al recurso relacionado.
+  * `POST /notificaciones/leer-todas`: Marca todas las alertas pendientes como leídas en una sola acción.
+
+### 15.4. Programación de Tareas del Servidor (*Scheduler*)
+
+En `routes/console.php` se configuran las tareas recurrentes del sistema:
+```php
+// Envío del resumen diario a las 19:00 horas (Zona horaria Colombia: America/Bogota)
+Schedule::command('erp:resumen-diario')
+    ->dailyAt(config('erp.daily_summary_at', '19:00'))
+    ->timezone('America/Bogota');
+
+// Limpieza mensual de la bitácora de auditoría histórica antigua
+Schedule::command('activitylog:clean')->monthly();
+```
+
+* **Entorno de Correo para Desarrollo:** Servicio `mailpit` configurado en `compose.yaml` (puerto Web UI `8025`, puerto SMTP `1025`) para interceptar y validar correos sin envíos reales a destinatarios externos.
+* **Parámetros del Negocio (`config/erp.php`):**
+  * `low_stock_threshold`: 5 unidades.
+  * `daily_summary_at`: '19:00'.
+
+### 15.5. Pruebas Automatizadas de la Clase 14
+
+* `tests/Feature/Clase14Test.php`:
+  * `test_la_venta_dispara_el_evento`: Verifica que la venta dispare `SaleRegistered`.
+  * `test_alerta_de_stock_bajo_solo_al_cruzar_el_umbral`: Comprueba que no se envíen alertas duplicadas si el producto ya estaba bajo el umbral.
+  * `test_recepcion_de_compra_notifica_con_pdf_adjunto`: Valida generación y adjunto del PDF de compra en la notificación.
+  * `test_campana_de_notificaciones`: Verifica contador y marcado de leídas en interfaz.
+  * `test_resumen_diario_y_programacion`: Ejecuta el comando y verifica la notificación a los roles gerenciales.
+  * **Resultado:** `5 passed (27 assertions)`.
+
+---
+
+## 16. Clase 15 — Pruebas Automatizadas, Integración Continua (CI/CD) y Preparación para Producción
+
+La última sesión del seminario consolida el aseguramiento de la calidad mediante pruebas unitarias, pruebas de integración de reglas de negocio, matriz de seguridad automatizada, validación estática de estilo con **Laravel Pint**, canalización de **CI con GitHub Actions** y la preparación integral para el despliegue en servidores de producción.
+
+### 16.1. Fábricas de Modelos (*Model Factories*)
+
+Se crearon e integraron fábricas de Eloquent en `database/factories/` para generar datos de prueba realistas en una sola línea bajo el patrón *Arrange*:
+* **`ClientFactory`:** Genera clientes con tipo de documento (`CC`), número de identificación único, nombre, correo seguro, teléfono celular colombiano (`3XXXXXXXXX`), dirección residencial y estado activo. Incluye el estado `Client::factory()->inactive()`.
+* **`ProviderFactory`:** Genera personas jurídicas con `NIT` colombiano, razón social (`SAS`), persona de contacto, correo corporativo, teléfono fijo (`60XXXXXXXX`) y estado activo/inactivo.
+* **`ProductFactory`:** Asocia automáticamente una categoría válida, genera nombres comerciales, descripciones, precio y existencias. Provee métodos fluidos de estado como `withStock(n)` e `inactive()`.
+* **Trait `HasFactory`:** Incorporado en los modelos `Client`, `Provider`, `Product` y `User`.
+
+### 16.2. Pruebas Unitarias Aisladas (Unit Testing)
+
+* **`tests/Unit/PermissionCatalogTest.php`:**
+  * Prueba de nivel unitario puro que extiende directamente de `PHPUnit\Framework\TestCase` (no levanta el kernel HTTP ni base de datos, ejecutándose en milisegundos).
+  * Emplea el atributo PHP 8 `#[DataProvider('nombres')]` para verificar la función modular `PermissionCatalog::split()` ante permisos simples (`ver-productos`), acciones compuestas (`recibir-compras`), módulos con guión (`ver-ordenes-servicio`) y permisos sin delimitador (`administrar`).
+
+### 16.3. Pruebas de Reglas de Negocio de Ventas
+
+* **`tests/Feature/VentasReglasTest.php`:**
+  * Implementa el patrón riguroso **Preparar &bull; Ejecutar &bull; Verificar** (*Arrange &bull; Act &bull; Assert*) con base de datos limpia (`RefreshDatabase`):
+  1. `test_la_venta_descuenta_el_stock_y_calcula_el_iva`: Comprueba que una venta de 3 unidades sobre un stock de 10 deje exactamente 7 unidades, genere la factura `FV-XXXXX` y liquide el IVA del 19% con precisión centesimal.
+  2. `test_no_se_vende_mas_del_stock_disponible`: Verifica que un intento de sobreventa sea bloqueado con error de validación en sesión, que el stock permanezca inalterado y que la transacción efectúe `rollback` total sin dejar registros huérfanos.
+  3. `test_no_se_vende_a_un_cliente_inactivo`: Garantiza que clientes deshabilitados no puedan ser asignados a nuevas ventas.
+  4. `test_anular_devuelve_el_stock`: Valida que la anulación por parte de un Administrador devuelva las existencias a bodega y aplique borrado suave (`assertSoftDeleted`) con estado `anulada`.
+  5. `test_el_vendedor_no_puede_anular_ventas`: Certifica el control de acceso impidiendo que usuarios con rol `vendedor` anulen ventas (`assertForbidden` - HTTP 403).
+
+### 16.4. Matriz de Permisos por Rol como Prueba Automatizada
+
+* **`tests/Feature/PermisosPorRolTest.php`:**
+  * Transforma la matriz de seguridad del sistema en código ejecutable con `#[DataProvider('matriz')]`.
+  * Evalúa 11 casos de control de acceso según el principio de mínimo privilegio y segregación de funciones:
+    * `admin` -> `/configuracion` (HTTP 200), `/auditoria` (HTTP 200).
+    * `vendedor` -> `/sales/create` (HTTP 200), `/purchases` (HTTP 403), `/configuracion` (HTTP 403), `/inventario/kardex` (HTTP 403).
+    * `almacenista` -> `/purchases/create` (HTTP 200), `/inventario/kardex` (HTTP 200), `/sales` (HTTP 403), `/auditoria` (HTTP 403).
+    * Invitado no autenticado -> Redirección forzosa a `/login`.
+
+### 16.5. Integración Continua con GitHub Actions (CI/CD)
+
+Ubicado en `.github/workflows/pruebas.yml`, este flujo se dispara automáticamente en cada `push` a las ramas principales (`main`, `master`) y en cada `pull_request`:
+* **Servicio de Base de Datos Limpio:** Levanta un contenedor oficial de `mysql:8.4` con comprobación de salud (*healthcheck*) periódica.
+* **Entorno de Ejecución:** Ubuntu Linux con PHP 8.4 y extensiones requeridas (`mbstring`, `pdo_mysql`, `gd`, `zip`, `intl`).
+* **Instalación de Dependencias:** Composer sin dependencias de desarrollo y Node.js 22 con compilación de Vite (`npm ci && npm run build`).
+* **Revisión Estricta de Estilo:** Ejecuta `vendor/bin/pint --test` para certificar que el código respete el estándar Laravel.
+* **Ejecución Total de la Suite:** Corre `php artisan test` garantizando que ningún cambio degrade las funcionalidades existentes.
+
+### 16.6. Checklist de Preparación para Servidores de Producción
+
+Se suministra la plantilla oficial `.env.production.example` con los parámetros recomendados para entornos reales:
+
+| Parámetro | Configuración de Producción | Justificación |
+| :--- | :--- | :--- |
+| `APP_ENV` | `production` | Activa optimizaciones y comportamiento estricto del framework. |
+| `APP_DEBUG` | `false` | **Crítico:** Impide la divulgación de código fuente, trazas o credenciales en pantallas de error. |
+| `APP_URL` | `https://erp.midominio.com` | Dominio seguro con certificado SSL/TLS. |
+| `APP_FALLBACK_LOCALE` | `en` | Evita claves sin traducir en pantalla si no existe el paquete de idioma local. |
+| `LOG_CHANNEL` / `LOG_LEVEL` | `daily` / `warning` | Rotación diaria de logs registrando únicamente anomalías y errores. |
+| `SESSION_SECURE_COOKIE` | `true` | Restringe las cookies de sesión exclusivamente a conexiones cifradas HTTPS. |
+| `QUEUE_CONNECTION` | `database` | Colas administradas por Supervisor en segundo plano. |
+
+#### Comandos de Despliegue en el Servidor:
+```bash
+git pull
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force
+php artisan storage:link
+php artisan optimize
+php artisan queue:restart
+```
+
+#### Configuración de Tareas Programadas (Cron):
+```bash
+* * * * * cd /var/www/quickfood-erp && php artisan schedule:run >> /dev/null 2>&1
+```
+
+#### Demonio de Colas con Supervisor (`/etc/supervisor/conf.d/erp-worker.conf`):
+```ini
+[program:erp-worker]
+command=php /var/www/quickfood-erp/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/quickfood-erp/storage/logs/worker.log
+```
+
+---
+
+## 17. Certificación Integral del Sistema (86 Tests Automatizados y Pint)
+
+El proyecto cuenta con un 100% de cobertura funcional validada y cero incidencias de estilo de código:
+
+### 17.1. Control de Estilo de Código con Laravel Pint
+```bash
+./vendor/bin/sail pint --test
+```
+**Resultado:**
+```text
+  PASS ......................................................... 165 files
+```
+
+### 17.2. Ejecución de la Suite Completa de Pruebas
+```bash
+./vendor/bin/sail test
+```
+**Resultado Oficial:**
+```text
+   PASS  Tests\Unit\ExampleTest
+   PASS  Tests\Unit\PermissionCatalogTest (4 casos)
+   PASS  Tests\Feature\Clase10ComprasPdfTest (11 pruebas)
+   PASS  Tests\Feature\Clase10RolesPermisosAdicionalTest (12 pruebas)
+   PASS  Tests\Feature\Clase12AuditoriaKardexTest (9 pruebas)
+   PASS  Tests\Feature\Clase13Test (5 pruebas)
+   PASS  Tests\Feature\Clase14Test (5 pruebas)
+   PASS  Tests\Feature\Clase7RolesPermisosTest (7 pruebas)
+   PASS  Tests\Feature\Clase9IntegracionModulosTest (8 pruebas)
+   PASS  Tests\Feature\PermisosPorRolTest (11 casos de matriz)
+   PASS  Tests\Feature\QuickFoodErpTest (6 pruebas de dominio)
+   PASS  Tests\Feature\VentasReglasTest (5 pruebas de negocio)
+
+  Tests:    86 passed (481 assertions)
+  Duration: 62.19s
+```
 
 ---
 *Desarrollado con dedicación y rigurosidad técnica para el Seminario RAD &bull; Cotecnova 2026.*

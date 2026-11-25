@@ -6,10 +6,10 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Provider;
 use App\Models\Purchase;
-use App\Models\Sale;
 use App\Models\User;
 use App\Services\PurchaseService;
 use App\Services\SaleService;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -18,7 +18,7 @@ class Clase10ComprasPdfTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     /**

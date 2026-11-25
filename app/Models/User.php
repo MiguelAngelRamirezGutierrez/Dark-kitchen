@@ -60,10 +60,10 @@ class User extends Authenticatable
             ->dontLogEmptyChanges()
             ->useLogName('usuarios')
             ->setDescriptionForEvent(fn (string $event) => match ($event) {
-                'created'  => 'creado',
-                'updated'  => 'actualizado',
-                'deleted'  => 'eliminado',
-                default    => $event,
+                'created' => 'creado',
+                'updated' => 'actualizado',
+                'deleted' => 'eliminado',
+                default => $event,
             });
     }
 
