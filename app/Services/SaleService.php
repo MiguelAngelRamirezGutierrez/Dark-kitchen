@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Events\SaleRegistered;
 use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -85,6 +86,9 @@ class SaleService
                 // Descuento de stock + movimiento en el kardex (Clase 12)
                 $this->inventory->exit($item['product'], $item['quantity'], 'venta', $sale, (float) $item['unit_price']);
             }
+
+            // Clase 14: avisar que hubo una venta (los listeners deciden qué hacer)
+            SaleRegistered::dispatch($sale);
 
             return $sale;
         });

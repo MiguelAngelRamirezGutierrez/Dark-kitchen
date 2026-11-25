@@ -12,6 +12,7 @@ use App\Http\Controllers\DomiciliarioController;
 use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MetodoPagoController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductoController;
@@ -47,6 +48,11 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 // Rol activo y perfil de usuario
 Route::middleware('auth')->group(function () {
+    // Notificaciones del usuario (Clase 14)
+    Route::get('notificaciones', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('notificaciones/{id}', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('notificaciones/leer-todas', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+
     Route::get('rol-activo', [ActiveRoleController::class, 'edit'])->name('active-role.edit');
     Route::put('rol-activo', [ActiveRoleController::class, 'update'])->name('active-role.update');
 

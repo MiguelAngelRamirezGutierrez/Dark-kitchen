@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Events\PurchaseReceived;
 use App\Models\Purchase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -139,6 +140,9 @@ class PurchaseService
                 'received_at' => $complete ? now() : null,
                 'provider_invoice' => $providerInvoice ?: $purchase->provider_invoice,
             ]);
+
+            // Clase 14: avisar que llegó mercancía
+            PurchaseReceived::dispatch($purchase, $complete);
 
             return $purchase;
         });
